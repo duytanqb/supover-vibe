@@ -1,0 +1,399 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  SELLER
+  DESIGNER
+  FULFILLER
+  FINANCE
+  SUPPORT
+  LEADER
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  IN_PRODUCTION
+  QUALITY_CHECK
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PARTIAL
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  name          String?
+  password      String
+  avatar        String?
+  phone         String?
+  isActive      Boolean      @default(true)
+  emailVerified DateTime?
+  lastLoginAt   DateTime?
+  lastLoginIp   String?
+  metadata      Json         @default("{}")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  userRoles     UserRoles[]
+  teamMember    TeamMember?
+  auditLogs     AuditLog[]
+  sessions      Session[]
+  
+  @@index([email])
+  @@index([isActive])
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  code        UserRole     @unique
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  userRoles   UserRoles[]
+  permissions RolePermissions[]
+  
+  @@index([name])
+  @@index([code])
+}
+
+model Permission {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  description String?
+  resource    String
+  action      String
+  createdAt   DateTime          @default(now())
+  
+  roles       RolePermissions[]
+  
+  @@unique([resource, action])
+  @@index([resource])
+}
+
+model UserRoles {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  assignedAt DateTime @default(now())
+  assignedBy String?
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+model RolePermissions {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model Team {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  code        String      @unique
+  leaderId    String?
+  region      String?
+  isActive    Boolean     @default(true)
+  metadata    Json        @default("{}")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  members     TeamMember[]
+  stores      Store[]
+  
+  @@index([name])
+  @@index([code])
+  @@index([leaderId])
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  teamId    String
+  isLeader  Boolean  @default(false)
+  joinedAt  DateTime @default(now())
+  leftAt    DateTime?
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, teamId])
+  @@index([userId])
+  @@index([teamId])
+  @@index([isLeader])
+}
+
+model Store {
+  id          String    @id @default(cuid())
+  teamId      String
+  name        String
+  platform    String
+  apiKey      String?
+  apiSecret   String?
+  webhookUrl  String?
+  isActive    Boolean   @default(true)
+  settings    Json      @default("{}")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  products    Product[]
+  orders      Order[]
+  
+  @@index([teamId])
+  @@index([platform])
+  @@index([name])
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  storeId       String
+  sku           String
+  name          String
+  description   String?
+  basePrice     Decimal   @db.Decimal(10, 2)
+  costPrice     Decimal   @db.Decimal(10, 2)
+  weight        Decimal?  @db.Decimal(10, 3)
+  dimensions    Json?
+  category      String?
+  tags          String[]
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  store         Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orderItems    OrderItem[]
+  designs       ProductDesign[]
+  
+  @@unique([storeId, sku])
+  @@index([storeId])
+  @@index([sku])
+  @@index([name])
+}
+
+model Design {
+  id          String    @id @default(cuid())
+  name        String
+  fileUrl     String
+  thumbnailUrl String?
+  metadata    Json      @default("{}")
+  tags        String[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  products    ProductDesign[]
+  
+  @@index([name])
+}
+
+model ProductDesign {
+  id          String    @id @default(cuid())
+  productId   String
+  designId    String
+  placement   String
+  settings    Json      @default("{}")
+  
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  design      Design    @relation(fields: [designId], references: [id], onDelete: Cascade)
+  
+  @@unique([productId, designId, placement])
+  @@index([productId])
+  @@index([designId])
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  storeId         String
+  orderNumber     String        @unique
+  customerName    String
+  customerEmail   String?
+  shippingAddress Json
+  billingAddress  Json?
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(PENDING)
+  subtotal        Decimal       @db.Decimal(10, 2)
+  shippingCost    Decimal       @db.Decimal(10, 2)
+  tax             Decimal       @db.Decimal(10, 2)
+  discount        Decimal       @db.Decimal(10, 2) @default(0)
+  total           Decimal       @db.Decimal(10, 2)
+  currency        String        @default("USD")
+  notes           String?
+  metadata        Json          @default("{}")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  store           Store         @relation(fields: [storeId], references: [id])
+  items           OrderItem[]
+  productions     Production[]
+  shipments       Shipment[]
+  transactions    Transaction[]
+  
+  @@index([storeId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id          String    @id @default(cuid())
+  orderId     String
+  productId   String
+  quantity    Int
+  unitPrice   Decimal   @db.Decimal(10, 2)
+  totalPrice  Decimal   @db.Decimal(10, 2)
+  metadata    Json      @default("{}")
+  
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product   @relation(fields: [productId], references: [id])
+  
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Factory {
+  id          String    @id @default(cuid())
+  name        String
+  code        String    @unique
+  address     Json
+  capacity    Int
+  isActive    Boolean   @default(true)
+  settings    Json      @default("{}")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  productions Production[]
+  
+  @@index([code])
+  @@index([name])
+}
+
+model Production {
+  id          String    @id @default(cuid())
+  orderId     String
+  factoryId   String
+  batchNumber String    @unique
+  status      String
+  startedAt   DateTime?
+  completedAt DateTime?
+  metadata    Json      @default("{}")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  order       Order     @relation(fields: [orderId], references: [id])
+  factory     Factory   @relation(fields: [factoryId], references: [id])
+  
+  @@index([orderId])
+  @@index([factoryId])
+  @@index([batchNumber])
+  @@index([status])
+}
+
+model Shipment {
+  id              String    @id @default(cuid())
+  orderId         String
+  trackingNumber  String?
+  carrier         String
+  status          String
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  order           Order     @relation(fields: [orderId], references: [id])
+  
+  @@index([orderId])
+  @@index([trackingNumber])
+  @@index([status])
+}
+
+model Transaction {
+  id          String    @id @default(cuid())
+  orderId     String?
+  type        String
+  amount      Decimal   @db.Decimal(10, 2)
+  currency    String    @default("USD")
+  status      String
+  reference   String?
+  metadata    Json      @default("{}")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  order       Order?    @relation(fields: [orderId], references: [id])
+  
+  @@index([orderId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  userId      String?
+  action      String
+  entity      String
+  entityId    String
+  oldValue    Json?
+  newValue    Json?
+  metadata    Json      @default("{}")
+  ipAddress   String?
+  userAgent   String?
+  sessionId   String?
+  createdAt   DateTime  @default(now())
+  
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([sessionId])
+  @@index([createdAt])
+}
