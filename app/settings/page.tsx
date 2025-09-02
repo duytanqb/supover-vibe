@@ -83,11 +83,6 @@ export default function SettingsPage() {
     },
   })
 
-  useEffect(() => {
-    checkAuth()
-    fetchSettings()
-  }, [checkAuth, fetchSettings])
-
   const checkAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem("token")
@@ -217,6 +212,11 @@ export default function SettingsPage() {
       [key]: !prev[key]
     }))
   }
+
+  useEffect(() => {
+    checkAuth()
+    fetchSettings()
+  }, [checkAuth, fetchSettings])
 
   if (isLoading) {
     return (
