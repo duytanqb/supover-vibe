@@ -130,7 +130,6 @@ export default function SettingsPage() {
       }
 
       const data = await response.json()
-      setSettings(data.settings)
 
       // Populate form with existing values
       const settingsMap = data.settings.reduce((acc: any, setting: SystemSetting) => {
@@ -266,262 +265,65 @@ export default function SettingsPage() {
           </Alert>
         )}
 
-        <div className="space-y-6">
-          {/* General Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Globe className="h-5 w-5 mr-2" />
-                General Settings
-              </CardTitle>
-              <CardDescription>
-                Configure general system settings and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleSaveSettings)} className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="company_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Company Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Your Company Name" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            The name of your company or organization
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="support_email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Support Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="support@example.com" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Email address for system notifications
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="system_timezone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>System Timezone</FormLabel>
-                          <FormControl>
-                            <Input placeholder="UTC" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="currency"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Currency</FormLabel>
-                          <FormControl>
-                            <Input placeholder="USD" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-
-          {/* Storage Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Cloud className="h-5 w-5 mr-2" />
-                Storage Configuration
-              </CardTitle>
-              <CardDescription>
-                Configure Backblaze B2 storage settings for file uploads
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="backblaze_key_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Backblaze Key ID</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input 
-                            type={showSecrets['backblaze_key_id'] ? "text" : "password"}
-                            placeholder="Enter Backblaze Key ID" 
-                            {...field} 
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-0 top-0 h-full px-3"
-                            onClick={() => toggleSecretVisibility('backblaze_key_id')}
-                          >
-                            {showSecrets['backblaze_key_id'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormDescription>
-                        Application Key ID from Backblaze B2
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="backblaze_app_key"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Backblaze Application Key</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input 
-                            type={showSecrets['backblaze_app_key'] ? "text" : "password"}
-                            placeholder="Enter Backblaze Application Key" 
-                            {...field} 
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-0 top-0 h-full px-3"
-                            onClick={() => toggleSecretVisibility('backblaze_app_key')}
-                          >
-                            {showSecrets['backblaze_app_key'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormDescription>
-                        Application Key from Backblaze B2
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="backblaze_bucket_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bucket ID</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Bucket ID" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Backblaze B2 Bucket ID
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="backblaze_bucket_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bucket Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Bucket Name" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Backblaze B2 Bucket Name
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Platform Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <ShoppingBag className="h-5 w-5 mr-2" />
-                Platform Integrations
-              </CardTitle>
-              <CardDescription>
-                Configure API keys and authentication URLs for e-commerce platforms
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="tiktok_auth_url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>TikTok Shop Auth URL</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="https://auth.tiktok-shops.com/..." 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        OAuth authentication URL for TikTok Shop
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSaveSettings)} className="space-y-6">
+            {/* General Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Globe className="h-5 w-5 mr-2" />
+                  General Settings
+                </CardTitle>
+                <CardDescription>
+                  Configure general system settings and preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="shopify_api_key"
+                    name="company_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Shopify API Key</FormLabel>
+                        <FormLabel>Company Name</FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <Input 
-                              type={showSecrets['shopify_api_key'] ? "text" : "password"}
-                              placeholder="Enter API Key" 
-                              {...field} 
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="absolute right-0 top-0 h-full px-3"
-                              onClick={() => toggleSecretVisibility('shopify_api_key')}
-                            >
-                              {showSecrets['shopify_api_key'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </Button>
-                          </div>
+                          <Input placeholder="Your Company Name" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          The name of your company or organization
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="support_email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Support Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="support@example.com" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Email address for system notifications
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="system_timezone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>System Timezone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="UTC" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -530,53 +332,248 @@ export default function SettingsPage() {
 
                   <FormField
                     control={form.control}
-                    name="shopify_api_secret"
+                    name="currency"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Shopify API Secret</FormLabel>
+                        <FormLabel>Currency</FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <Input 
-                              type={showSecrets['shopify_api_secret'] ? "text" : "password"}
-                              placeholder="Enter API Secret" 
-                              {...field} 
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="absolute right-0 top-0 h-full px-3"
-                              onClick={() => toggleSecretVisibility('shopify_api_secret')}
-                            >
-                              {showSecrets['shopify_api_secret'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </Button>
-                          </div>
+                          <Input placeholder="USD" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <div className="flex justify-end">
-            <Button onClick={form.handleSubmit(handleSaveSettings)} disabled={isSaving}>
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save All Settings
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+            {/* Storage Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Cloud className="h-5 w-5 mr-2" />
+                  Storage Configuration
+                </CardTitle>
+                <CardDescription>
+                  Configure Backblaze B2 storage settings for file uploads
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="backblaze_key_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Backblaze Key ID</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type={showSecrets['backblaze_key_id'] ? "text" : "password"}
+                              placeholder="Enter Backblaze Key ID" 
+                              {...field} 
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3"
+                              onClick={() => toggleSecretVisibility('backblaze_key_id')}
+                            >
+                              {showSecrets['backblaze_key_id'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Application Key ID from Backblaze B2
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="backblaze_app_key"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Backblaze Application Key</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type={showSecrets['backblaze_app_key'] ? "text" : "password"}
+                              placeholder="Enter Backblaze Application Key" 
+                              {...field} 
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3"
+                              onClick={() => toggleSecretVisibility('backblaze_app_key')}
+                            >
+                              {showSecrets['backblaze_app_key'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Application Key from Backblaze B2
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="backblaze_bucket_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bucket ID</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter Bucket ID" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Backblaze B2 Bucket ID
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="backblaze_bucket_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bucket Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter Bucket Name" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Backblaze B2 Bucket Name
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Platform Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <ShoppingBag className="h-5 w-5 mr-2" />
+                  Platform Integrations
+                </CardTitle>
+                <CardDescription>
+                  Configure API keys and authentication URLs for e-commerce platforms
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="tiktok_auth_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>TikTok Shop Auth URL</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://auth.tiktok-shops.com/..." 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          OAuth authentication URL for TikTok Shop
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="shopify_api_key"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Shopify API Key</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input 
+                                type={showSecrets['shopify_api_key'] ? "text" : "password"}
+                                placeholder="Enter API Key" 
+                                {...field} 
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3"
+                                onClick={() => toggleSecretVisibility('shopify_api_key')}
+                              >
+                                {showSecrets['shopify_api_key'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="shopify_api_secret"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Shopify API Secret</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input 
+                                type={showSecrets['shopify_api_secret'] ? "text" : "password"}
+                                placeholder="Enter API Secret" 
+                                {...field} 
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3"
+                                onClick={() => toggleSecretVisibility('shopify_api_secret')}
+                              >
+                                {showSecrets['shopify_api_secret'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save All Settings
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </div>
     </div>
   )
