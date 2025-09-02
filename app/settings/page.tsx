@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { PageHeader } from '@/components/layout/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -230,27 +232,15 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center space-x-4 mb-8">
-          <Link href="/dashboard">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          <div className="flex items-center space-x-2">
-            <Settings className="h-6 w-6 text-primary" />
-            <h1 className="text-3xl font-bold">System Settings</h1>
-          </div>
-          <div className="ml-auto">
-            <Badge variant="destructive" className="bg-red-100 text-red-800">
-              <Shield className="h-3 w-3 mr-1" />
-              SUPER ADMIN ONLY
-            </Badge>
-          </div>
-        </div>
+    <AdminLayout>
+      <PageHeader 
+        title="System Settings" 
+        description="Configure system-wide settings and integrations"
+        badge="SUPER ADMIN ONLY"
+        badgeVariant="destructive"
+      />
 
+      <div className="space-y-6">
         {error && (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
@@ -575,6 +565,6 @@ export default function SettingsPage() {
           </form>
         </Form>
       </div>
-    </div>
+    </AdminLayout>
   )
 }

@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { PageHeader } from '@/components/layout/page-header'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -108,52 +110,45 @@ export default function RolesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center space-x-4 mb-8">
-          <Link href="/dashboard">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          <div className="flex items-center space-x-2">
-            <Shield className="h-6 w-6 text-primary" />
-            <h1 className="text-3xl font-bold">Role Management</h1>
-          </div>
-        </div>
+    <AdminLayout>
+      <PageHeader 
+        title="Role Management" 
+        description="Manage user roles and their permissions"
+        action={
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Role
+          </Button>
+        }
+      />
 
+      <div className="space-y-6">
         {error && (
-          <Alert variant="destructive" className="mb-6">
+          <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search roles..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-80"
-              />
-            </div>
-          </div>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Role
-          </Button>
-        </div>
-
         <Card>
           <CardHeader>
-            <CardTitle>Roles ({filteredRoles.length})</CardTitle>
-            <CardDescription>
-              Manage system roles and their permissions
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Roles ({filteredRoles.length})</CardTitle>
+                <CardDescription>
+                  Manage system roles and their permissions
+                </CardDescription>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search roles..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-64"
+                />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
@@ -225,6 +220,6 @@ export default function RolesPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AdminLayout>
   )
 }

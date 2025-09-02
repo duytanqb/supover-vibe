@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { PageHeader } from '@/components/layout/page-header'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -477,40 +479,11 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center space-x-4 mb-8">
-          <Link href="/dashboard">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          <div className="flex items-center space-x-2">
-            <Users className="h-6 w-6 text-primary" />
-            <h1 className="text-3xl font-bold">User Management</h1>
-          </div>
-        </div>
-
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-80"
-              />
-            </div>
-          </div>
+    <AdminLayout>
+      <PageHeader 
+        title="User Management" 
+        description="Manage users, roles, and permissions"
+        action={
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -632,14 +605,36 @@ export default function UsersPage() {
               </Form>
             </DialogContent>
           </Dialog>
-        </div>
+        }
+      />
+
+      <div className="space-y-6">
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <Card>
           <CardHeader>
-            <CardTitle>Users ({filteredUsers.length})</CardTitle>
-            <CardDescription>
-              Manage user accounts, roles, and permissions
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Users ({filteredUsers.length})</CardTitle>
+                <CardDescription>
+                  Manage user accounts, roles, and permissions
+                </CardDescription>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-64"
+                />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
@@ -1069,6 +1064,6 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
+    </AdminLayout>
   )
 }

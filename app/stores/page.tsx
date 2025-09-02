@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { PageHeader } from '@/components/layout/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, Store, ExternalLink, Settings } from 'lucide-react'
+import { Plus, Store, ExternalLink, Settings, Search, Package, ShoppingCart, Edit, MoreHorizontal } from 'lucide-react'
 
 const createStoreSchema = z.object({
   teamId: z.string().cuid(),
@@ -47,6 +50,7 @@ interface Store {
 export default function StoresPage() {
   const [stores, setStores] = useState<Store[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   
   const {
@@ -102,35 +106,48 @@ export default function StoresPage() {
     }
   }
 
-  const getPlatformBadgeColor = (platform: string) => {
-    switch (platform) {
-      case 'TIKTOK_SHOP': return 'bg-pink-500'
-      case 'SHOPIFY': return 'bg-green-500'
-      case 'ETSY': return 'bg-orange-500'
-      case 'AMAZON': return 'bg-yellow-600'
-      default: return 'bg-gray-500'
-    }
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading stores...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    )
   }
 
-  if (loading) {
-    return <div className="p-6">Loading stores...</div>
+  const filteredStores = stores.filter(store =>
+    store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    store.platform.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const getPlatformColor = (platform: string) => {
+    const colors: Record<string, string> = {
+      TIKTOK_SHOP: 'bg-pink-100 text-pink-800',
+      SHOPIFY: 'bg-green-100 text-green-800',
+      ETSY: 'bg-orange-100 text-orange-800',
+      AMAZON: 'bg-yellow-100 text-yellow-800',
+      CUSTOM: 'bg-gray-100 text-gray-800'
+    }
+    return colors[platform] || 'bg-gray-100 text-gray-800'
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Stores</h1>
-          <p className="text-muted-foreground">Manage your sales channels and integrations</p>
-        </div>
-        
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Store
-            </Button>
-          </DialogTrigger>
+    <AdminLayout>
+      <PageHeader 
+        title="Stores" 
+        description="Manage your sales channels and integrations"
+        action={
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Store
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Store</DialogTitle>
@@ -218,82 +235,126 @@ export default function StoresPage() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+        }
+      />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {stores.map((store) => (
-          <Card key={store.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Store className="w-5 h-5" />
-                  <CardTitle className="text-lg">{store.name}</CardTitle>
-                </div>
-                <Badge 
-                  className={`${getPlatformBadgeColor(store.platform)} text-white`}
-                >
-                  {store.platform.replace('_', ' ')}
-                </Badge>
-              </div>
-              <CardDescription>Team: {store.team.name}</CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Products</p>
-                  <p className="font-medium">{store._count.products}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Orders</p>
-                  <p className="font-medium">{store._count.orders}</p>
-                </div>
-              </div>
-              
-              {store.storeUrl && (
-                <div className="flex items-center space-x-2 text-sm">
-                  <ExternalLink className="w-4 h-4" />
-                  <a 
-                    href={store.storeUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline"
-                  >
-                    Visit Store
-                  </a>
-                </div>
-              )}
-              
-              <div className="flex justify-between items-center pt-2">
-                <Badge variant={store.isActive ? 'default' : 'secondary'}>
-                  {store.isActive ? 'Active' : 'Inactive'}
-                </Badge>
-                
-                <Button variant="outline" size="sm">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Manage
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Store Channels ({filteredStores.length})</CardTitle>
+              <CardDescription>
+                Active sales channels connected to your fulfillment hub
+              </CardDescription>
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search stores..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-64"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Store Name</TableHead>
+                <TableHead>Platform</TableHead>
+                <TableHead>Team</TableHead>
+                <TableHead>Products</TableHead>
+                <TableHead>Orders</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredStores.map((store) => (
+                <TableRow key={store.id}>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <Store className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">{store.name}</p>
+                        {store.storeUrl && (
+                          <a 
+                            href={store.storeUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline flex items-center"
+                          >
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            Visit Store
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getPlatformColor(store.platform)}>
+                      {store.platform.replace('_', ' ')}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{store.team.name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-1">
+                      <Package className="w-4 h-4 text-muted-foreground" />
+                      <span>{store._count.products}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-1">
+                      <ShoppingCart className="w-4 h-4 text-muted-foreground" />
+                      <span>{store._count.orders}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={store.isActive ? 'default' : 'secondary'}>
+                      {store.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(store.createdAt).toLocaleDateString()}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button variant="outline" size="sm">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Settings className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          
+          {filteredStores.length === 0 && (
+            <div className="text-center py-12">
+              <Store className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No stores found</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchTerm ? 'Try adjusting your search' : 'Connect your first sales channel to start processing orders'}
+              </p>
+              {!searchTerm && (
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Your First Store
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      
-      {stores.length === 0 && (
-        <Card className="text-center py-12">
-          <CardContent>
-            <Store className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No stores yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Connect your first sales channel to start processing orders
-            </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Store
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </AdminLayout>
   )
 }

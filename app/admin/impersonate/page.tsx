@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { PageHeader } from '@/components/layout/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -209,20 +211,13 @@ export default function ImpersonatePage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">User Impersonation</h1>
-          <p className="text-muted-foreground">View the system as another user for support and debugging</p>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-            <AlertTriangle className="w-3 h-3 mr-1" />
-            Admin Only
-          </Badge>
-        </div>
-      </div>
+    <AdminLayout>
+      <PageHeader 
+        title="User Impersonation" 
+        description="View the system as another user for support and debugging"
+        badge="ADMIN ONLY"
+        badgeVariant="destructive"
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -453,6 +448,6 @@ export default function ImpersonatePage() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminLayout>
   )
 }
