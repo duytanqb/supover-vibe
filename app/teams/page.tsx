@@ -109,6 +109,7 @@ export default function TeamsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isAddUserOpen, setIsAddUserOpen] = useState(false)
+  const [isMembersViewOpen, setIsMembersViewOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<TeamFormValues>({
@@ -315,6 +316,11 @@ export default function TeamsPage() {
   const openAddUserDialog = (team: Team) => {
     setSelectedTeam(team)
     setIsAddUserOpen(true)
+  }
+
+  const openMembersView = (team: Team) => {
+    setSelectedTeam(team)
+    setIsMembersViewOpen(true)
   }
 
   const filteredTeams = teams.filter(team =>
@@ -569,7 +575,16 @@ export default function TeamsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => openMembersView(team)}
+                            title="View Members"
+                          >
+                            <Users className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => openAddUserDialog(team)}
+                            title="Add User"
                           >
                             <UserPlus className="h-4 w-4" />
                           </Button>
@@ -577,6 +592,7 @@ export default function TeamsPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditDialog(team)}
+                            title="Edit Team"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -584,6 +600,7 @@ export default function TeamsPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteTeam(team.id)}
+                            title="Delete Team"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -734,17 +751,17 @@ export default function TeamsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Team Members Details */}
-        {selectedTeam && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Team Members - {selectedTeam.name}</CardTitle>
-              <CardDescription>
-                Manage team members and their roles
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {selectedTeam.members.length === 0 ? (
+        {/* Team Members View Dialog */}
+        <Dialog open={isMembersViewOpen} onOpenChange={setIsMembersViewOpen}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Team Members - {selectedTeam?.name}</DialogTitle>
+              <DialogDescription>
+                View and manage team members and their roles
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-4">
+              {selectedTeam?.members.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No members in this team yet
                 </div>
@@ -759,7 +776,7 @@ export default function TeamsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectedTeam.members.map((member) => (
+                    {selectedTeam?.members.map((member) => (
                       <TableRow key={member.id}>
                         <TableCell>
                           <div className="flex items-center space-x-3">
@@ -794,7 +811,11 @@ export default function TeamsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleRemoveUserFromTeam(member.user.id)}
+                            onClick={() => {
+                              handleRemoveUserFromTeam(member.user.id)
+                              setIsMembersViewOpen(false)
+                            }}
+                            title="Remove from team"
                           >
                             <UserMinus className="h-4 w-4" />
                           </Button>
@@ -804,9 +825,26 @@ export default function TeamsPage() {
                   </TableBody>
                 </Table>
               )}
-            </CardContent>
-          </Card>
-        )}
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  if (selectedTeam) {
+                    openAddUserDialog(selectedTeam)
+                    setIsMembersViewOpen(false)
+                  }
+                }}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Members
+              </Button>
+              <Button onClick={() => setIsMembersViewOpen(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
