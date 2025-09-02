@@ -73,6 +73,7 @@ async function main() {
 
   // Create sample users with random roles
   const sampleUsers = [
+    { name: 'Super Admin', email: 'superadmin@dragonmedia.com', role: 'SUPER_ADMIN' as UserRole, teamCode: 'NA_TEAM' },
     { name: 'John Admin', email: 'admin@dragonmedia.com', role: 'ADMIN' as UserRole, teamCode: 'NA_TEAM' },
     { name: 'Sarah Seller', email: 'sarah@dragonmedia.com', role: 'SELLER' as UserRole, teamCode: 'NA_TEAM' },
     { name: 'Mike Designer', email: 'mike@dragonmedia.com', role: 'DESIGNER' as UserRole, teamCode: 'DESIGN_TEAM' },
@@ -93,6 +94,7 @@ async function main() {
       where: { email: userData.email },
       update: {},
       create: {
+        username: userData.email.split('@')[0],
         name: userData.name,
         email: userData.email,
         password: hashedPassword,

@@ -18,7 +18,10 @@ import {
   HeadphonesIcon,
   Crown,
   LogOut,
-  AlertCircle
+  AlertCircle,
+  Shield,
+  Key,
+  Lock
 } from "lucide-react"
 
 interface User {
@@ -112,6 +115,20 @@ const roleConfigs = {
       { title: "Team Overview", description: "Monitor team performance", icon: Users, href: "/team" },
       { title: "Team Analytics", description: "View team metrics", icon: BarChart3, href: "/team/analytics" },
       { title: "Member Management", description: "Manage team members", icon: Settings, href: "/team/members" },
+    ]
+  },
+  SUPER_ADMIN: {
+    title: "System Administrator",
+    description: "Full system control and management",
+    icon: Shield,
+    color: "text-red-600",
+    cards: [
+      { title: "System Settings", description: "Configure system settings", icon: Settings, href: "/settings" },
+      { title: "User Management", description: "Manage all users", icon: Users, href: "/users" },
+      { title: "Team Management", description: "Manage all teams", icon: Shield, href: "/teams" },
+      { title: "Role Management", description: "Configure roles", icon: Key, href: "/roles" },
+      { title: "Permission Management", description: "Configure permissions", icon: Lock, href: "/permissions" },
+      { title: "Analytics Dashboard", description: "System-wide analytics", icon: BarChart3, href: "/analytics" },
     ]
   }
 }
@@ -218,7 +235,7 @@ export default function DashboardPage() {
         <div className="mb-8">
           <h2 className="text-3xl font-bold mb-2">Welcome back, {user.name}!</h2>
           <p className="text-muted-foreground">
-            Here's what's happening with your {primaryRole.toLowerCase()} operations.
+            Here&apos;s what&apos;s happening with your {primaryRole.toLowerCase()} operations.
           </p>
         </div>
 

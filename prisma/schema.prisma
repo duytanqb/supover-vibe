@@ -57,6 +57,7 @@ model User {
   teamMember    TeamMember?
   auditLogs     AuditLog[]
   sessions      Session[]
+  systemSettings SystemSettings[]
   
   @@index([email])
   @@index([isActive])
@@ -374,6 +375,22 @@ model Transaction {
   @@index([type])
   @@index([status])
   @@index([createdAt])
+}
+
+model SystemSettings {
+  id                String    @id @default(cuid())
+  key               String    @unique
+  value             String?   @db.Text
+  category          String
+  description       String?
+  isSecret          Boolean   @default(false)
+  updatedBy         String?
+  updatedByUser     User?     @relation(fields: [updatedBy], references: [id])
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([category])
+  @@index([key])
 }
 
 model AuditLog {

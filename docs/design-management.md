@@ -1,6 +1,6 @@
 Overview
 
-Centralized design management module for handling artwork assets, variant mapping, and order integration.
+Centralized design management module for handling artwork assets, order integration.
 Designs are linked to product items in orders and can be reused for future orders with the same product configuration.
 
 Key Features
@@ -23,7 +23,7 @@ Role-based access (Seller, Designer, Fulfiller)
 
 Design Lifecycle
 
-Draft → In Review → Approved → Ready for Print → Locked → Archived
+Draft → In Review → Approved → Archived
 
 Draft: Initial upload or creation
 
