@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const signupSchema = z.object({
+  username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
   name: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(6),
@@ -17,11 +18,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = signupSchema.parse(body)
 
-    const existingUser = await prisma.user.findUnique({
+    // Check if username already exists
+    const existingUsername = await prisma.user.findUnique({
+      where: { username: validatedData.username }
+    })
+
+    if (existingUsername) {
+      return NextResponse.json(
+        { message: "Username already taken" },
+        { status: 400 }
+      )
+    }
+
+    // Check if email already exists
+    const existingEmail = await prisma.user.findUnique({
       where: { email: validatedData.email }
     })
 
-    if (existingUser) {
+    if (existingEmail) {
       return NextResponse.json(
         { message: "User already exists with this email" },
         { status: 400 }
@@ -32,6 +46,7 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
+        username: validatedData.username,
         name: validatedData.name,
         email: validatedData.email,
         password: hashedPassword,

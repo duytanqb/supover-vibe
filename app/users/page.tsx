@@ -61,6 +61,7 @@ import Link from "next/link"
 
 interface User {
   id: string
+  username: string
   name: string
   email: string
   phone?: string
@@ -99,6 +100,7 @@ interface Team {
 }
 
 const userSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters").max(20).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores").optional(),
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters").optional(),
@@ -129,6 +131,7 @@ export default function UsersPage() {
   const userForm = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
     defaultValues: {
+      username: "",
       name: "",
       email: "",
       password: "",
@@ -354,6 +357,7 @@ export default function UsersPage() {
 
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
@@ -433,6 +437,19 @@ export default function UsersPage() {
               </DialogHeader>
               <Form {...userForm}>
                 <form onSubmit={userForm.handleSubmit(handleCreateUser)} className="space-y-4">
+                  <FormField
+                    control={userForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username (cannot be changed)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="johndoe" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={userForm.control}
                     name="name"
@@ -560,7 +577,7 @@ export default function UsersPage() {
                         <div>
                           <div className="font-medium">{user.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            ID: {user.id.slice(0, 8)}...
+                            @{user.username}
                           </div>
                         </div>
                       </div>

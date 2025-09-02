@@ -5,6 +5,7 @@ import bcryptjs from "bcryptjs"
 import { z } from "zod"
 
 const userSchema = z.object({
+  username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
   name: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(6),
@@ -81,6 +82,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       users: users.map(user => ({
         id: user.id,
+        username: user.username,
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -150,11 +152,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = userSchema.parse(body)
 
-    const existingUser = await prisma.user.findUnique({
+    // Check if username already exists
+    const existingUsername = await prisma.user.findUnique({
+      where: { username: validatedData.username }
+    })
+
+    if (existingUsername) {
+      return NextResponse.json(
+        { message: "Username already taken" },
+        { status: 400 }
+      )
+    }
+
+    // Check if email already exists
+    const existingEmail = await prisma.user.findUnique({
       where: { email: validatedData.email }
     })
 
-    if (existingUser) {
+    if (existingEmail) {
       return NextResponse.json(
         { message: "User with this email already exists" },
         { status: 400 }
@@ -165,6 +180,7 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
+        username: validatedData.username,
         name: validatedData.name,
         email: validatedData.email,
         password: hashedPassword,
@@ -180,6 +196,7 @@ export async function POST(request: NextRequest) {
         entity: "User",
         entityId: user.id,
         newValue: {
+          username: validatedData.username,
           name: validatedData.name,
           email: validatedData.email,
           phone: validatedData.phone,

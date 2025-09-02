@@ -10,6 +10,7 @@ const updateUserSchema = z.object({
   password: z.string().min(6).optional(),
   phone: z.string().optional(),
   isActive: z.boolean().optional(),
+  // Username cannot be changed after creation
 })
 
 export async function PUT(
