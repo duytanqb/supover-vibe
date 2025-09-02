@@ -29,6 +29,22 @@ enum OrderStatus {
   REFUNDED
 }
 
+enum DesignStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  ARCHIVED
+  REJECTED
+}
+
+enum ChannelType {
+  TIKTOK_SHOP
+  SHOPIFY
+  ETSY
+  AMAZON
+  CUSTOM
+}
+
 enum PaymentStatus {
   PENDING
   PAID
@@ -58,6 +74,8 @@ model User {
   auditLogs     AuditLog[]
   sessions      Session[]
   systemSettings SystemSettings[]
+  adminImpersonations ImpersonationSession[] @relation("AdminImpersonations")
+  targetImpersonations ImpersonationSession[] @relation("TargetImpersonations")
   
   @@index([email])
   @@index([isActive])
@@ -150,6 +168,7 @@ model Team {
   
   members     TeamMember[]
   stores      Store[]
+  designs     Design[]
   
   @@index([name])
   @@index([code])
@@ -174,25 +193,30 @@ model TeamMember {
 }
 
 model Store {
-  id          String    @id @default(cuid())
+  id          String      @id @default(cuid())
   teamId      String
   name        String
-  platform    String
+  platform    ChannelType
+  storeUrl    String?
   apiKey      String?
   apiSecret   String?
   webhookUrl  String?
-  isActive    Boolean   @default(true)
-  settings    Json      @default("{}")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  sellerId    String?
+  region      String?
+  currency    String      @default("USD")
+  isActive    Boolean     @default(true)
+  settings    Json        @default("{}")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   
-  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team        Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
   products    Product[]
   orders      Order[]
   
   @@index([teamId])
   @@index([platform])
   @@index([name])
+  @@index([sellerId])
 }
 
 model Product {
@@ -222,18 +246,34 @@ model Product {
 }
 
 model Design {
-  id          String    @id @default(cuid())
-  name        String
-  fileUrl     String
-  thumbnailUrl String?
-  metadata    Json      @default("{}")
-  tags        String[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id              String       @id @default(cuid())
+  teamId          String
+  name            String
+  fingerprint     String       @unique
+  fileUrl         String
+  printReadyFile  String?
+  thumbnailUrl    String?
+  artworkData     Json?
+  printSpecs      Json?
+  status          DesignStatus @default(DRAFT)
+  designerId      String?
+  sellerId        String?
+  metadata        Json         @default("{}")
+  tags            String[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  archivedAt      DateTime?
   
-  products    ProductDesign[]
+  team            Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  products        ProductDesign[]
+  orderItems      OrderItem[]
+  fulfillments    Fulfillment[]
   
-  @@index([name])
+  @@index([teamId])
+  @@index([fingerprint])
+  @@index([status])
+  @@index([sellerId])
+  @@index([designerId])
 }
 
 model ProductDesign {
@@ -277,6 +317,8 @@ model Order {
   productions     Production[]
   shipments       Shipment[]
   transactions    Transaction[]
+  statusHistory   OrderStatusHistory[]
+  fulfillments    Fulfillment[]
   
   @@index([storeId])
   @@index([orderNumber])
@@ -288,16 +330,22 @@ model OrderItem {
   id          String    @id @default(cuid())
   orderId     String
   productId   String
+  designId    String?
   quantity    Int
   unitPrice   Decimal   @db.Decimal(10, 2)
   totalPrice  Decimal   @db.Decimal(10, 2)
+  printSpecs  Json?
+  artworkData Json?
   metadata    Json      @default("{}")
   
   order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product   @relation(fields: [productId], references: [id])
+  design      Design?   @relation(fields: [designId], references: [id])
+  fulfillments Fulfillment[]
   
   @@index([orderId])
   @@index([productId])
+  @@index([designId])
 }
 
 model Factory {
@@ -312,6 +360,7 @@ model Factory {
   updatedAt   DateTime  @updatedAt
   
   productions Production[]
+  fulfillments Fulfillment[]
   
   @@index([code])
   @@index([name])
@@ -414,4 +463,73 @@ model AuditLog {
   @@index([action])
   @@index([sessionId])
   @@index([createdAt])
+}
+
+model ImpersonationSession {
+  id              String    @id @default(cuid())
+  adminUserId     String
+  targetUserId    String
+  sessionToken    String    @unique
+  reason          String?
+  ipAddress       String?
+  userAgent       String?
+  isActive        Boolean   @default(true)
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+  expiresAt       DateTime
+  
+  adminUser       User      @relation("AdminImpersonations", fields: [adminUserId], references: [id], onDelete: Cascade)
+  targetUser      User      @relation("TargetImpersonations", fields: [targetUserId], references: [id], onDelete: Cascade)
+  
+  @@index([adminUserId])
+  @@index([targetUserId])
+  @@index([sessionToken])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+model OrderStatusHistory {
+  id          String      @id @default(cuid())
+  orderId     String
+  status      OrderStatus
+  reason      String?
+  updatedBy   String?
+  metadata    Json        @default("{}")
+  createdAt   DateTime    @default(now())
+  
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Fulfillment {
+  id              String    @id @default(cuid())
+  orderId         String
+  orderItemId     String
+  designId        String?
+  factoryId       String
+  status          String
+  batchNumber     String?
+  estimatedAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  trackingNumber  String?
+  notes           String?
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  order           Order     @relation(fields: [orderId], references: [id])
+  orderItem       OrderItem @relation(fields: [orderItemId], references: [id])
+  design          Design?   @relation(fields: [designId], references: [id])
+  factory         Factory   @relation(fields: [factoryId], references: [id])
+  
+  @@index([orderId])
+  @@index([orderItemId])
+  @@index([designId])
+  @@index([factoryId])
+  @@index([status])
+  @@index([batchNumber])
 }

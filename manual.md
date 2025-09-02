@@ -46,3 +46,8 @@ claude-code generate "Create shadcn/ui components for user management interface 
 
 # Step 4: API routes
 claude-code generate "Implement Next.js API routes for user management endpoints as documented in docs/user-management.md"
+
+  To run tests:
+  npm run test           # Run all tests
+  npm run test:ui        # Interactive mode
+  npm run test:headed    # See browser

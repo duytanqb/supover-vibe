@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import jwt from "jsonwebtoken"
 import { z } from "zod"
+import { verifyAuth, hasPermission } from "@/lib/auth"
 
 const settingSchema = z.object({
   key: z.string(),
@@ -19,54 +19,18 @@ const settingsSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization")
+    const user = await verifyAuth(authHeader)
     
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!user) {
       return NextResponse.json(
-        { message: "No valid token provided" },
+        { message: "Unauthorized" },
         { status: 401 }
       )
     }
 
-    const token = authHeader.split(" ")[1]
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "fallback-secret-key"
-    ) as { userId: string; email: string }
-
-    const currentUser = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      include: {
-        userRoles: {
-          include: {
-            role: {
-              include: {
-                permissions: {
-                  include: {
-                    permission: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!currentUser) {
+    if (!hasPermission(user, ['ADMIN', 'SUPER_ADMIN'])) {
       return NextResponse.json(
-        { message: "User not found" },
-        { status: 404 }
-      )
-    }
-
-    // Check if user has settings.read permission
-    const userPermissions = currentUser.userRoles.flatMap(ur => 
-      ur.role.permissions.map(rp => `${rp.permission.resource}.${rp.permission.action}`)
-    )
-    
-    if (!userPermissions.includes('settings.read')) {
-      return NextResponse.json(
-        { message: "Insufficient permissions to read settings" },
+        { message: "Insufficient permissions" },
         { status: 403 }
       )
     }
@@ -97,54 +61,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization")
+    const user = await verifyAuth(authHeader)
     
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!user) {
       return NextResponse.json(
-        { message: "No valid token provided" },
+        { message: "Unauthorized" },
         { status: 401 }
       )
     }
 
-    const token = authHeader.split(" ")[1]
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "fallback-secret-key"
-    ) as { userId: string; email: string }
-
-    const currentUser = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      include: {
-        userRoles: {
-          include: {
-            role: {
-              include: {
-                permissions: {
-                  include: {
-                    permission: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!currentUser) {
+    if (!hasPermission(user, ['ADMIN', 'SUPER_ADMIN'])) {
       return NextResponse.json(
-        { message: "User not found" },
-        { status: 404 }
-      )
-    }
-
-    // Check if user has settings.write permission
-    const userPermissions = currentUser.userRoles.flatMap(ur => 
-      ur.role.permissions.map(rp => `${rp.permission.resource}.${rp.permission.action}`)
-    )
-    
-    if (!userPermissions.includes('settings.write')) {
-      return NextResponse.json(
-        { message: "Insufficient permissions to modify settings" },
+        { message: "Insufficient permissions" },
         { status: 403 }
       )
     }
@@ -168,14 +96,14 @@ export async function POST(request: NextRequest) {
               category: setting.category,
               description: setting.description,
               isSecret: setting.isSecret,
-              updatedBy: currentUser.id,
+              updatedBy: user.id,
             },
           })
 
           // Log the change
           await prisma.auditLog.create({
             data: {
-              userId: currentUser.id,
+              userId: user.id,
               action: "SETTING_UPDATED",
               entity: "SystemSettings",
               entityId: existingSetting.id,
@@ -201,14 +129,14 @@ export async function POST(request: NextRequest) {
             category: setting.category,
             description: setting.description,
             isSecret: setting.isSecret,
-            updatedBy: currentUser.id,
+            updatedBy: user.id,
           },
         })
 
         // Log the creation
         await prisma.auditLog.create({
           data: {
-            userId: currentUser.id,
+            userId: user.id,
             action: "SETTING_CREATED",
             entity: "SystemSettings",
             entityId: newSetting.id,

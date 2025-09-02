@@ -84,7 +84,7 @@ PUT    /api/listings/[id]/price     # Update pricing
 
 **product_variants** (Physical Configurations)
 - id, product_id, variant_sku
-- size, color, material, weight
+- type, color, size
 - base_price, cost_price, seller_margin
 - print_methods_supported (jsonb)
 - linked_design_id (for auto-fulfillment)

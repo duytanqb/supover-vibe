@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import jwt from "jsonwebtoken"
 import { z } from "zod"
+import { verifyAuth, hasPermission } from "@/lib/auth"
 
 const teamSchema = z.object({
   name: z.string().min(2),
@@ -13,43 +13,16 @@ const teamSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization")
+    const user = await verifyAuth(authHeader)
     
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!user) {
       return NextResponse.json(
-        { message: "No valid token provided" },
+        { message: "Unauthorized" },
         { status: 401 }
       )
     }
 
-    const token = authHeader.split(" ")[1]
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "fallback-secret-key"
-    ) as { userId: string; email: string }
-
-    const currentUser = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      include: {
-        userRoles: {
-          include: {
-            role: true,
-          },
-        },
-      },
-    })
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { message: "User not found" },
-        { status: 404 }
-      )
-    }
-
-    const hasAdminRole = currentUser.userRoles.some(ur => 
-      ur.role.code === 'ADMIN' || ur.role.code === 'SUPER_ADMIN' || ur.role.code === 'LEADER'
-    )
-
-    if (!hasAdminRole) {
+    if (!hasPermission(user, ['ADMIN', 'SUPER_ADMIN', 'LEADER'])) {
       return NextResponse.json(
         { message: "Insufficient permissions" },
         { status: 403 }
@@ -88,43 +61,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization")
+    const user = await verifyAuth(authHeader)
     
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!user) {
       return NextResponse.json(
-        { message: "No valid token provided" },
+        { message: "Unauthorized" },
         { status: 401 }
       )
     }
 
-    const token = authHeader.split(" ")[1]
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "fallback-secret-key"
-    ) as { userId: string; email: string }
-
-    const currentUser = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      include: {
-        userRoles: {
-          include: {
-            role: true,
-          },
-        },
-      },
-    })
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { message: "User not found" },
-        { status: 404 }
-      )
-    }
-
-    const hasAdminRole = currentUser.userRoles.some(ur => 
-      ur.role.code === 'ADMIN' || ur.role.code === 'SUPER_ADMIN'
-    )
-
-    if (!hasAdminRole) {
+    if (!hasPermission(user, ['ADMIN', 'SUPER_ADMIN'])) {
       return NextResponse.json(
         { message: "Insufficient permissions" },
         { status: 403 }
@@ -151,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.auditLog.create({
       data: {
-        userId: currentUser.id,
+        userId: user.id,
         action: "TEAM_CREATED",
         entity: "Team",
         entityId: team.id,

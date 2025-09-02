@@ -3,9 +3,14 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { PageHeader } from '@/components/layout/page-header'
+import { StatsCard } from '@/components/layout/stats-card'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { ImpersonationBanner } from "@/components/ui/impersonation-banner"
 import { 
   ShoppingCart, 
   Package, 
@@ -21,7 +26,12 @@ import {
   AlertCircle,
   Shield,
   Key,
-  Lock
+  Lock,
+  TrendingUp,
+  Zap,
+  CheckCircle,
+  Clock,
+  Plus
 } from "lucide-react"
 
 interface User {
@@ -33,6 +43,18 @@ interface User {
     id: string
     name: string
   }
+  isImpersonating?: boolean
+  adminUser?: {
+    id: string
+    name: string
+    email: string
+  }
+  impersonationSession?: {
+    id: string
+    reason: string
+    expiresAt: Date
+    startedAt: Date
+  }
 }
 
 const roleConfigs = {
@@ -43,6 +65,7 @@ const roleConfigs = {
     color: "text-purple-600",
     cards: [
       { title: "User Management", description: "Manage users and permissions", icon: Users, href: "/users" },
+      { title: "User Impersonation", description: "Impersonate users for support", icon: Shield, href: "/admin/impersonate" },
       { title: "Team Management", description: "Manage teams and members", icon: Users, href: "/teams" },
       { title: "Role Management", description: "Manage roles and permissions", icon: Settings, href: "/roles" },
       { title: "Permission Management", description: "Manage system permissions", icon: Settings, href: "/permissions" },
@@ -125,6 +148,7 @@ const roleConfigs = {
     cards: [
       { title: "System Settings", description: "Configure system settings", icon: Settings, href: "/settings" },
       { title: "User Management", description: "Manage all users", icon: Users, href: "/users" },
+      { title: "User Impersonation", description: "Impersonate users for support", icon: Shield, href: "/admin/impersonate" },
       { title: "Team Management", description: "Manage all teams", icon: Shield, href: "/teams" },
       { title: "Role Management", description: "Configure roles", icon: Key, href: "/roles" },
       { title: "Permission Management", description: "Configure permissions", icon: Lock, href: "/permissions" },
@@ -171,7 +195,34 @@ export default function DashboardPage() {
 
   const handleLogout = () => {
     localStorage.removeItem("token")
+    localStorage.removeItem("impersonationToken")
+    localStorage.removeItem("originalToken")
     router.push("/login")
+  }
+
+  const handleEndImpersonation = async () => {
+    if (!user?.impersonationSession) return
+    
+    try {
+      const response = await fetch(`/api/admin/impersonate?sessionToken=${user.impersonationSession.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      
+      if (response.ok) {
+        const originalToken = localStorage.getItem('originalToken')
+        if (originalToken) {
+          localStorage.setItem('token', originalToken)
+          localStorage.removeItem('originalToken')
+          localStorage.removeItem('impersonationToken')
+          window.location.reload()
+        }
+      }
+    } catch (error) {
+      console.error('Error ending impersonation:', error)
+    }
   }
 
   if (isLoading) {
@@ -203,55 +254,71 @@ export default function DashboardPage() {
   const IconComponent = config.icon
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <IconComponent className={`h-8 w-8 ${config.color}`} />
-              <div>
-                <h1 className="text-2xl font-bold">{config.title}</h1>
-                <p className="text-sm text-muted-foreground">{config.description}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="font-medium">{user.name}</p>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-                {user.team && (
-                  <p className="text-xs text-muted-foreground">Team: {user.team.name}</p>
-                )}
-              </div>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <AdminLayout>
+      {user.isImpersonating && user.adminUser && user.impersonationSession && (
+        <ImpersonationBanner
+          adminUser={user.adminUser}
+          targetUser={user}
+          impersonationSession={user.impersonationSession}
+          onEndImpersonation={handleEndImpersonation}
+        />
+      )}
+      
+      <PageHeader 
+        title={`Welcome back, ${user.name}!`}
+        description={`Here's what's happening with your ${primaryRole.toLowerCase()} operations`}
+        badge={primaryRole}
+        badgeVariant="outline"
+      />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Welcome back, {user.name}!</h2>
-          <p className="text-muted-foreground">
-            Here&apos;s what&apos;s happening with your {primaryRole.toLowerCase()} operations.
-          </p>
-        </div>
+      {/* Stats Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <StatsCard
+          title="Total Orders"
+          value="1,247"
+          description="This month"
+          icon={<ShoppingCart className="h-6 w-6" />}
+          trend={{ value: 12.5, label: "vs last month", positive: true }}
+        />
+        <StatsCard
+          title="Products"
+          value="156"
+          description="Active catalog"
+          icon={<Package className="h-6 w-6" />}
+          trend={{ value: 8.2, label: "vs last month", positive: true }}
+        />
+        <StatsCard
+          title="Designs"
+          value="89"
+          description="Ready for auto-fulfillment"
+          icon={<Palette className="h-6 w-6" />}
+          trend={{ value: 15.3, label: "vs last month", positive: true }}
+        />
+        <StatsCard
+          title="Revenue"
+          value="$24,580"
+          description="This month"
+          icon={<TrendingUp className="h-6 w-6" />}
+          trend={{ value: 18.7, label: "vs last month", positive: true }}
+        />
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      {/* Main Content Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Quick Access Cards */}
+        <div className="lg:col-span-2 grid gap-4 md:grid-cols-2">
           {config.cards.map((card, index) => {
             const CardIcon = card.icon
             return (
               <Link key={index} href={card.href}>
-                <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                <Card className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-                    <CardIcon className="h-4 w-4 text-muted-foreground" />
+                    <CardIcon className="h-5 w-5 text-blue-600" />
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-muted-foreground">{card.description}</p>
-                    <Button variant="ghost" size="sm" className="mt-2 p-0 h-auto">
+                    <p className="text-xs text-gray-600 mb-3">{card.description}</p>
+                    <Button variant="ghost" size="sm" className="p-0 h-auto text-blue-600 hover:text-blue-700">
                       Access →
                     </Button>
                   </CardContent>
@@ -261,60 +328,90 @@ export default function DashboardPage() {
           })}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Stats</CardTitle>
-              <CardDescription>Overview of your key metrics</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Active since</span>
-                  <span className="font-medium">
-                    {new Date(user.id).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Role</span>
-                  <span className="font-medium">{user.roles.join(", ")}</span>
-                </div>
-                {user.team && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Team</span>
-                    <span className="font-medium">{user.team.name}</span>
-                  </div>
-                )}
+        {/* System Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle>System Status</CardTitle>
+            <CardDescription>Auto-fulfillment health</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-sm">Order Processing</span>
               </div>
-            </CardContent>
-          </Card>
+              <Badge className="bg-green-100 text-green-700">Online</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-sm">Factory Integration</span>
+              </div>
+              <Badge className="bg-green-100 text-green-700">Connected</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-yellow-600" />
+                <span className="text-sm">Design Matching</span>
+              </div>
+              <Badge className="bg-yellow-100 text-yellow-700">Processing</Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your latest actions and updates</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm">Logged in successfully</p>
-                    <p className="text-xs text-muted-foreground">Just now</p>
-                  </div>
+      {/* User Info Section */}
+      <div className="grid gap-6 md:grid-cols-2 mt-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Account Details</CardTitle>
+            <CardDescription>Your account information</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Email</span>
+                <span className="font-medium">{user.email}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Role</span>
+                <Badge variant="outline">{user.roles.join(", ")}</Badge>
+              </div>
+              {user.team && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Team</span>
+                  <span className="font-medium">{user.team.name}</span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm">Account created</p>
-                    <p className="text-xs text-muted-foreground">Today</p>
-                  </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Your latest actions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm">Logged in successfully</p>
+                  <p className="text-xs text-gray-500">Just now</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm">Dashboard accessed</p>
+                  <p className="text-xs text-gray-500">Today</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </AdminLayout>
   )
 }

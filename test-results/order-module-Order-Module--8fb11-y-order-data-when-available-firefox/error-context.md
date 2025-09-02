@@ -1,0 +1,191 @@
+# Page snapshot
+
+```yaml
+- dialog "Unhandled Runtime Error" [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - navigation [ref=e7]:
+          - button "previous" [disabled] [ref=e8]:
+            - img "previous" [ref=e9]
+          - button "next" [disabled] [ref=e11]:
+            - img "next" [ref=e12]
+          - generic [ref=e14]:
+            - generic [ref=e15]: "1"
+            - text: of
+            - generic [ref=e16]: "1"
+            - text: error
+          - generic [ref=e17]:
+            - generic "An outdated version detected (latest is 15.5.2), upgrade is highly recommended!" [ref=e19]: Next.js (14.2.32) is outdated
+            - link "(learn more)" [ref=e20] [cursor=pointer]:
+              - /url: https://nextjs.org/docs/messages/version-staleness
+        - button "Close" [ref=e21] [cursor=pointer]:
+          - img [ref=e23] [cursor=pointer]
+      - heading "Unhandled Runtime Error" [level=1] [ref=e26]
+      - paragraph [ref=e27]: "Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder."
+    - generic [ref=e28]:
+      - heading "Call Stack" [level=2] [ref=e29]
+      - generic [ref=e30]:
+        - heading "_c21<" [level=3] [ref=e31]
+        - link "../src/select.tsx (1278:13)" [ref=e32] [cursor=pointer]:
+          - generic [ref=e33] [cursor=pointer]: ../src/select.tsx (1278:13)
+          - img [ref=e34] [cursor=pointer]
+      - group [ref=e38]:
+        - generic "React" [ref=e39] [cursor=pointer]:
+          - img [ref=e40] [cursor=pointer]
+          - img [ref=e42] [cursor=pointer]
+          - text: React
+      - group [ref=e45]:
+        - generic "Next.js" [ref=e46] [cursor=pointer]:
+          - img [ref=e47] [cursor=pointer]
+          - img [ref=e49] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e54]:
+        - heading "options.factory" [level=3] [ref=e55]
+        - generic [ref=e57]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (715:31)
+      - group [ref=e58]:
+        - generic "Next.js" [ref=e59] [cursor=pointer]:
+          - img [ref=e60] [cursor=pointer]
+          - img [ref=e62] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e67]:
+        - heading "fn" [level=3] [ref=e68]
+        - generic [ref=e70]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (371:21)
+      - group [ref=e71]:
+        - generic "React" [ref=e72] [cursor=pointer]:
+          - img [ref=e73] [cursor=pointer]
+          - img [ref=e75] [cursor=pointer]
+          - text: React
+      - group [ref=e78]:
+        - generic "Next.js" [ref=e79] [cursor=pointer]:
+          - img [ref=e80] [cursor=pointer]
+          - img [ref=e82] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e87]:
+        - heading "options.factory" [level=3] [ref=e88]
+        - generic [ref=e90]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (715:31)
+      - group [ref=e91]:
+        - generic "Next.js" [ref=e92] [cursor=pointer]:
+          - img [ref=e93] [cursor=pointer]
+          - img [ref=e95] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e100]:
+        - heading "fn" [level=3] [ref=e101]
+        - generic [ref=e103]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (371:21)
+      - group [ref=e104]:
+        - generic "React" [ref=e105] [cursor=pointer]:
+          - img [ref=e106] [cursor=pointer]
+          - img [ref=e108] [cursor=pointer]
+          - text: React
+      - group [ref=e111]:
+        - generic "Next.js" [ref=e112] [cursor=pointer]:
+          - img [ref=e113] [cursor=pointer]
+          - img [ref=e115] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e120]:
+        - heading "options.factory" [level=3] [ref=e121]
+        - generic [ref=e123]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (715:31)
+      - group [ref=e124]:
+        - generic "Next.js" [ref=e125] [cursor=pointer]:
+          - img [ref=e126] [cursor=pointer]
+          - img [ref=e128] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e133]:
+        - heading "fn" [level=3] [ref=e134]
+        - generic [ref=e136]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (371:21)
+      - group [ref=e137]:
+        - generic "React" [ref=e138] [cursor=pointer]:
+          - img [ref=e139] [cursor=pointer]
+          - img [ref=e141] [cursor=pointer]
+          - text: React
+      - group [ref=e144]:
+        - generic "Next.js" [ref=e145] [cursor=pointer]:
+          - img [ref=e146] [cursor=pointer]
+          - img [ref=e148] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e153]:
+        - heading "options.factory" [level=3] [ref=e154]
+        - generic [ref=e156]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (715:31)
+      - group [ref=e157]:
+        - generic "Next.js" [ref=e158] [cursor=pointer]:
+          - img [ref=e159] [cursor=pointer]
+          - img [ref=e161] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e166]:
+        - heading "fn" [level=3] [ref=e167]
+        - generic [ref=e169]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (371:21)
+      - group [ref=e170]:
+        - generic "React" [ref=e171] [cursor=pointer]:
+          - img [ref=e172] [cursor=pointer]
+          - img [ref=e174] [cursor=pointer]
+          - text: React
+      - group [ref=e177]:
+        - generic "Next.js" [ref=e178] [cursor=pointer]:
+          - img [ref=e179] [cursor=pointer]
+          - img [ref=e181] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e186]:
+        - heading "options.factory" [level=3] [ref=e187]
+        - generic [ref=e189]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (715:31)
+      - group [ref=e190]:
+        - generic "Next.js" [ref=e191] [cursor=pointer]:
+          - img [ref=e192] [cursor=pointer]
+          - img [ref=e194] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e199]:
+        - heading "fn" [level=3] [ref=e200]
+        - generic [ref=e202]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (371:21)
+      - group [ref=e203]:
+        - generic "Next.js" [ref=e204] [cursor=pointer]:
+          - img [ref=e205] [cursor=pointer]
+          - img [ref=e207] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e212]:
+        - heading "options.factory" [level=3] [ref=e213]
+        - generic [ref=e215]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (715:31)
+      - group [ref=e216]:
+        - generic "Next.js" [ref=e217] [cursor=pointer]:
+          - img [ref=e218] [cursor=pointer]
+          - img [ref=e220] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e225]:
+        - heading "fn" [level=3] [ref=e226]
+        - generic [ref=e228]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (371:21)
+      - generic [ref=e229]:
+        - heading "<unknown>" [level=3] [ref=e230]
+        - generic [ref=e232]: webpack:/src/client/app-next-dev.ts
+      - generic [ref=e233]:
+        - heading "callback" [level=3] [ref=e234]
+        - generic [ref=e236]: webpack:/src/client/app-bootstrap.ts
+      - generic [ref=e237]:
+        - heading "hydrate" [level=3] [ref=e238]
+        - generic [ref=e240]: webpack:/src/client/app-bootstrap.ts
+      - generic [ref=e241]:
+        - heading "self" [level=3] [ref=e242]
+        - generic [ref=e244]: webpack:/src/client/app-bootstrap.ts
+      - generic [ref=e245]:
+        - heading "<unknown>" [level=3] [ref=e246]
+        - generic [ref=e248]: webpack:/src/client/app-next-dev.ts
+      - group [ref=e249]:
+        - generic "Next.js" [ref=e250] [cursor=pointer]:
+          - img [ref=e251] [cursor=pointer]
+          - img [ref=e253] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e258]:
+        - heading "options.factory" [level=3] [ref=e259]
+        - generic [ref=e261]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/webpack.js (715:31)
+      - group [ref=e262]:
+        - generic "Next.js" [ref=e263] [cursor=pointer]:
+          - img [ref=e264] [cursor=pointer]
+          - img [ref=e266] [cursor=pointer]
+          - text: Next.js
+      - generic [ref=e271]:
+        - heading "<unknown>" [level=3] [ref=e272]
+        - generic [ref=e274]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/main-app.js (1997:154)
+      - generic [ref=e275]:
+        - heading "<unknown>" [level=3] [ref=e276]
+        - generic [ref=e278]: webpackJsonpCallback@http://localhost:3000/_next/static/chunks/webpack.js?v=1756788871937 (1387:46)
+      - generic [ref=e279]:
+        - heading "<unknown>" [level=3] [ref=e280]
+        - generic [ref=e282]: file:/Volumes/DATA/dev/supover-vibe/.next/static/chunks/main-app.js (9:61)
+```

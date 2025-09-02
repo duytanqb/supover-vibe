@@ -55,7 +55,8 @@ import {
   Shield,
   Loader2,
   UserCog,
-  Settings
+  Settings,
+  Eye
 } from "lucide-react"
 import Link from "next/link"
 
@@ -112,13 +113,21 @@ const roleAssignmentSchema = z.object({
   roleIds: z.array(z.string()).min(1, "At least one role must be selected"),
 })
 
+const impersonateSchema = z.object({
+  targetUserId: z.string().cuid(),
+  reason: z.string().min(5, 'Please provide a detailed reason (min 5 characters)'),
+  duration: z.number().min(1).max(480).default(60)
+})
+
 type UserFormValues = z.infer<typeof userSchema>
 type RoleAssignmentFormValues = z.infer<typeof roleAssignmentSchema>
+type ImpersonateFormValues = z.infer<typeof impersonateSchema>
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [teams, setTeams] = useState<Team[]>([])
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -126,6 +135,7 @@ export default function UsersPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isRoleOpen, setIsRoleOpen] = useState(false)
+  const [isImpersonateOpen, setIsImpersonateOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const userForm = useForm<UserFormValues>({
@@ -147,11 +157,39 @@ export default function UsersPage() {
     },
   })
 
+  const impersonateForm = useForm<ImpersonateFormValues>({
+    resolver: zodResolver(impersonateSchema),
+    defaultValues: {
+      duration: 60
+    },
+  })
+
   useEffect(() => {
+    fetchCurrentUser()
     fetchUsers()
     fetchRoles()
     fetchTeams()
   }, [])
+
+  const fetchCurrentUser = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) return
+
+      const response = await fetch("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setCurrentUser(data.user)
+      }
+    } catch (err) {
+      console.error("Failed to fetch current user:", err)
+    }
+  }
 
   const fetchUsers = async () => {
     try {
@@ -353,6 +391,58 @@ export default function UsersPage() {
     setSelectedUser(user)
     roleForm.setValue("roleIds", user.roles.map(r => r.role.id))
     setIsRoleOpen(true)
+  }
+
+  const openImpersonateDialog = (user: User) => {
+    setSelectedUser(user)
+    impersonateForm.setValue("targetUserId", user.id)
+    setIsImpersonateOpen(true)
+  }
+
+  const handleImpersonate = async (data: ImpersonateFormValues) => {
+    setIsSubmitting(true)
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch("/api/admin/impersonate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to start impersonation")
+      }
+
+      const result = await response.json()
+      
+      localStorage.setItem('impersonationToken', result.impersonationToken)
+      localStorage.setItem('originalToken', localStorage.getItem('token') || '')
+      localStorage.setItem('token', result.impersonationToken)
+      
+      setIsImpersonateOpen(false)
+      impersonateForm.reset()
+      setSelectedUser(null)
+      
+      window.location.href = '/dashboard'
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start impersonation")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const canImpersonate = (user: User, currentUserRoles: string[]) => {
+    const hasAdminRole = currentUserRoles.some(role => ['SUPER_ADMIN', 'ADMIN'].includes(role))
+    if (!hasAdminRole) return false
+    
+    const targetHasSuperAdmin = user.roles.some(ur => ur.role.code === 'SUPER_ADMIN')
+    const currentUserIsSuperAdmin = currentUserRoles.includes('SUPER_ADMIN')
+    
+    return !targetHasSuperAdmin || currentUserIsSuperAdmin
   }
 
   const filteredUsers = users.filter(user =>
@@ -656,6 +746,16 @@ export default function UsersPage() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        {currentUser && canImpersonate(user, currentUser.roles) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openImpersonateDialog(user)}
+                            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -768,6 +868,122 @@ export default function UsersPage() {
                       </>
                     ) : (
                       "Update User"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Impersonation Dialog */}
+        <Dialog open={isImpersonateOpen} onOpenChange={setIsImpersonateOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Impersonate User</DialogTitle>
+              <DialogDescription>
+                You are about to impersonate {selectedUser?.name}. This action is logged and monitored.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...impersonateForm}>
+              <form onSubmit={impersonateForm.handleSubmit(handleImpersonate)} className="space-y-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 text-yellow-600" />
+                    <p className="text-sm text-yellow-800 font-medium">Security Notice</p>
+                  </div>
+                  <ul className="text-sm text-yellow-700 mt-2 space-y-1">
+                    <li>• All actions will be logged and audited</li>
+                    <li>• Session will automatically expire</li>
+                    <li>• You can end the session at any time</li>
+                    <li>• Only use for legitimate support purposes</li>
+                  </ul>
+                </div>
+                
+                <FormField
+                  control={impersonateForm.control}
+                  name="reason"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Reason for Impersonation</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Debugging user's order issue, providing customer support..."
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={impersonateForm.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Session Duration</FormLabel>
+                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="15">15 minutes</SelectItem>
+                          <SelectItem value="30">30 minutes</SelectItem>
+                          <SelectItem value="60">1 hour</SelectItem>
+                          <SelectItem value="120">2 hours</SelectItem>
+                          <SelectItem value="240">4 hours</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {selectedUser && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm font-medium">Target User:</p>
+                    <p className="text-sm">{selectedUser.name} ({selectedUser.email})</p>
+                    <div className="flex space-x-1 mt-1">
+                      {selectedUser.roles.map((ur) => (
+                        <Badge
+                          key={ur.role.code}
+                          variant="secondary"
+                          className={getRoleBadgeColor(ur.role.code)}
+                        >
+                          {ur.role.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsImpersonateOpen(false)
+                      setSelectedUser(null)
+                      impersonateForm.reset()
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="bg-orange-600 hover:bg-orange-700"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Starting...
+                      </>
+                    ) : (
+                      "Start Impersonation"
                     )}
                   </Button>
                 </DialogFooter>
