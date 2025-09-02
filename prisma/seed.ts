@@ -40,6 +40,9 @@ async function main() {
     { name: 'Read Finance', resource: 'finance', action: 'read' },
     { name: 'Write Finance', resource: 'finance', action: 'write' },
     { name: 'Read Reports', resource: 'reports', action: 'read' },
+    { name: 'Read Settings', resource: 'settings', action: 'read' },
+    { name: 'Write Settings', resource: 'settings', action: 'write' },
+    { name: 'Delete Settings', resource: 'settings', action: 'delete' },
   ]
 
   for (const permission of permissions) {
@@ -139,6 +142,59 @@ async function main() {
           isLeader: userData.role === 'LEADER',
         },
       })
+    }
+  }
+
+  // Assign permissions to roles
+  const rolePermissions = [
+    // SUPER_ADMIN gets all permissions
+    { roleCode: 'SUPER_ADMIN', permissions: ['users.read', 'users.write', 'users.delete', 'stores.read', 'stores.write', 'stores.delete', 'orders.read', 'orders.write', 'orders.delete', 'finance.read', 'finance.write', 'reports.read', 'settings.read', 'settings.write', 'settings.delete'] },
+    // ADMIN gets most permissions except settings
+    { roleCode: 'ADMIN', permissions: ['users.read', 'users.write', 'stores.read', 'stores.write', 'orders.read', 'orders.write', 'finance.read', 'reports.read'] },
+    // SELLER gets store and order permissions
+    { roleCode: 'SELLER', permissions: ['stores.read', 'stores.write', 'orders.read', 'orders.write'] },
+    // DESIGNER gets limited permissions
+    { roleCode: 'DESIGNER', permissions: ['orders.read'] },
+    // FULFILLER gets order and production permissions
+    { roleCode: 'FULFILLER', permissions: ['orders.read', 'orders.write'] },
+    // FINANCE gets financial permissions
+    { roleCode: 'FINANCE', permissions: ['finance.read', 'finance.write', 'reports.read'] },
+    // SUPPORT gets read permissions
+    { roleCode: 'SUPPORT', permissions: ['users.read', 'orders.read'] },
+    // LEADER gets team management permissions
+    { roleCode: 'LEADER', permissions: ['users.read', 'orders.read', 'reports.read'] },
+  ]
+
+  for (const rolePermission of rolePermissions) {
+    const role = await prisma.role.findUnique({
+      where: { code: rolePermission.roleCode as UserRole }
+    })
+
+    if (role) {
+      for (const permissionKey of rolePermission.permissions) {
+        const [resource, action] = permissionKey.split('.')
+        const permission = await prisma.permission.findUnique({
+          where: {
+            resource_action: { resource, action }
+          }
+        })
+
+        if (permission) {
+          await prisma.rolePermissions.upsert({
+            where: {
+              roleId_permissionId: {
+                roleId: role.id,
+                permissionId: permission.id,
+              }
+            },
+            update: {},
+            create: {
+              roleId: role.id,
+              permissionId: permission.id,
+            }
+          })
+        }
+      }
     }
   }
 

@@ -25,7 +25,15 @@ export async function GET(request: NextRequest) {
       include: {
         userRoles: {
           include: {
-            role: true,
+            role: {
+              include: {
+                permissions: {
+                  include: {
+                    permission: true,
+                  },
+                },
+              },
+            },
           },
         },
         teamMember: {
@@ -60,6 +68,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get all user permissions from their roles
+    const userPermissions = user.userRoles.flatMap(ur => 
+      ur.role.permissions.map(rp => `${rp.permission.resource}.${rp.permission.action}`)
+    )
+
     return NextResponse.json({
       user: {
         id: user.id,
@@ -68,6 +81,7 @@ export async function GET(request: NextRequest) {
         avatar: user.avatar,
         phone: user.phone,
         roles: user.userRoles.map(ur => ur.role.code),
+        permissions: userPermissions,
         team: user.teamMember?.team,
         lastLoginAt: user.lastLoginAt,
       },

@@ -104,9 +104,9 @@ export default function SettingsPage() {
 
       const data = await response.json()
       
-      // Check if user is SUPER_ADMIN
-      const isSuperAdmin = data.user.roles.includes("SUPER_ADMIN")
-      if (!isSuperAdmin) {
+      // Check if user has settings.read permission
+      const hasSettingsAccess = data.user.permissions?.includes("settings.read")
+      if (!hasSettingsAccess) {
         router.push("/dashboard")
         return
       }

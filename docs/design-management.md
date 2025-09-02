@@ -23,27 +23,20 @@ Role-based access (Seller, Designer, Fulfiller)
 
 Design Lifecycle
 
-Draft → In Review → Approved → Archived
+Draft → Design → Review → Archived
 
 Draft: Initial upload or creation
 
-In Review: Pending team lead or seller approval
+Design: Design assigned to designer and being designing
 
-Approved: Approved for production use
+Review: Approved for production use after designer upload and finish artwork
 
-Ready for Print: Print-ready files generated
-
-Locked: Frozen design version, immutable
-
-Archived: No longer in active use
+Archived: Print-ready files generated and approved manual or AI
 
 Reuse Logic
-
-Each design is assigned a fingerprint (product type + print area + print method + artwork hash + dimensions).
-
 When a new order item is created:
 
-If a matching fingerprint exists and status is Approved/Ready/Locked → reuse existing design
+If a matching fingerprint exists and status is Approved→ reuse existing design
 
 If partial match → suggest clone/variant
 

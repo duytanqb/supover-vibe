@@ -38,7 +38,15 @@ export async function GET(request: NextRequest) {
       include: {
         userRoles: {
           include: {
-            role: true,
+            role: {
+              include: {
+                permissions: {
+                  include: {
+                    permission: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -51,14 +59,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Only SUPER_ADMIN can access settings
-    const isSuperAdmin = currentUser.userRoles.some(ur => 
-      ur.role.code === 'SUPER_ADMIN'
+    // Check if user has settings.read permission
+    const userPermissions = currentUser.userRoles.flatMap(ur => 
+      ur.role.permissions.map(rp => `${rp.permission.resource}.${rp.permission.action}`)
     )
-
-    if (!isSuperAdmin) {
+    
+    if (!userPermissions.includes('settings.read')) {
       return NextResponse.json(
-        { message: "Insufficient permissions" },
+        { message: "Insufficient permissions to read settings" },
         { status: 403 }
       )
     }
@@ -108,7 +116,15 @@ export async function POST(request: NextRequest) {
       include: {
         userRoles: {
           include: {
-            role: true,
+            role: {
+              include: {
+                permissions: {
+                  include: {
+                    permission: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -121,14 +137,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Only SUPER_ADMIN can modify settings
-    const isSuperAdmin = currentUser.userRoles.some(ur => 
-      ur.role.code === 'SUPER_ADMIN'
+    // Check if user has settings.write permission
+    const userPermissions = currentUser.userRoles.flatMap(ur => 
+      ur.role.permissions.map(rp => `${rp.permission.resource}.${rp.permission.action}`)
     )
-
-    if (!isSuperAdmin) {
+    
+    if (!userPermissions.includes('settings.write')) {
       return NextResponse.json(
-        { message: "Insufficient permissions" },
+        { message: "Insufficient permissions to modify settings" },
         { status: 403 }
       )
     }
