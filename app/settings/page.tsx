@@ -105,7 +105,7 @@ export default function SettingsPage() {
       const data = await response.json()
       
       // Check if user is SUPER_ADMIN
-      const isSuperAdmin = data.user.roles.some((r: any) => r.role.code === "SUPER_ADMIN")
+      const isSuperAdmin = data.user.roles.includes("SUPER_ADMIN")
       if (!isSuperAdmin) {
         router.push("/dashboard")
         return
@@ -216,7 +216,8 @@ export default function SettingsPage() {
   useEffect(() => {
     checkAuth()
     fetchSettings()
-  }, [checkAuth, fetchSettings])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (isLoading) {
     return (
