@@ -115,13 +115,13 @@ export async function PUT(
       code: ur.role.code,
     }))
 
-    await prisma.userRole.deleteMany({
+    await prisma.userRoles.deleteMany({
       where: { userId },
     })
 
     const newUserRoles = await Promise.all(
       roleIds.map(roleId =>
-        prisma.userRole.create({
+        prisma.userRoles.create({
           data: {
             userId,
             roleId,
