@@ -114,7 +114,8 @@ All modules are documented under `/docs`:
 - Apply **React Hook Form + Zod** for all form validations  
 - Ensure **API endpoints documented** with input/output types  
 - Include **loading states** and **error boundaries** for all async components  
-- Optimize queries with Prisma (avoid N+1 queries)  
+- Optimize queries with Prisma (avoid N+1 queries)
+- Don't reset DB, seed data just add to DB don't remove old data
 
 ### Commit Rules (Conventional Commits)
 - `feat:` → New feature  

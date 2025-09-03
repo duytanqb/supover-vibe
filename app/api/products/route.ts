@@ -1,74 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
-
-const createProductSchema = z.object({
-  storeId: z.string().cuid(),
-  sku: z.string().min(1, 'SKU is required'),
-  name: z.string().min(1, 'Product name is required'),
-  description: z.string().optional(),
-  basePrice: z.number().positive('Base price must be positive'),
-  costPrice: z.number().positive('Cost price must be positive'),
-  weight: z.number().positive().optional(),
-  dimensions: z.record(z.any()).optional(),
-  category: z.string().optional(),
-  tags: z.array(z.string()).default([])
-})
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const storeId = searchParams.get('storeId')
-    const category = searchParams.get('category')
-    const search = searchParams.get('search')
+    const sku = searchParams.get('sku')
+    const name = searchParams.get('name')
+    const isActive = searchParams.get('isActive')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
     
     const where: any = {}
     if (storeId) where.storeId = storeId
-    if (category) where.category = category
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
-      ]
-    }
+    if (sku) where.sku = { contains: sku, mode: 'insensitive' }
+    if (name) where.name = { contains: name, mode: 'insensitive' }
+    if (isActive) where.isActive = isActive === 'true'
     
     const products = await prisma.product.findMany({
       where,
       include: {
         store: {
           select: {
+            id: true,
             name: true,
-            platform: true,
-            team: {
-              select: {
-                name: true
-              }
-            }
-          }
-        },
-        designs: {
-          include: {
-            design: {
-              select: {
-                id: true,
-                name: true,
-                thumbnailUrl: true,
-                status: true
-              }
-            }
+            platform: true
           }
         },
         _count: {
           select: {
-            orderItems: true
+            orderItems: true,
+            designs: true
           }
         }
       },
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: { createdAt: 'desc' }
     })
     
-    return NextResponse.json(products)
+    const total = await prisma.product.count({ where })
+    
+    return NextResponse.json({
+      products,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    })
   } catch (error) {
     console.error('Error fetching products:', error)
     return NextResponse.json(
@@ -81,13 +62,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const validatedData = createProductSchema.parse(body)
     
+    // Check if SKU already exists for this store
     const existingProduct = await prisma.product.findUnique({
       where: {
         storeId_sku: {
-          storeId: validatedData.storeId,
-          sku: validatedData.sku
+          storeId: body.storeId,
+          sku: body.sku
         }
       }
     })
@@ -100,17 +81,24 @@ export async function POST(request: NextRequest) {
     }
     
     const product = await prisma.product.create({
-      data: validatedData,
+      data: {
+        storeId: body.storeId,
+        sku: body.sku,
+        name: body.name,
+        description: body.description,
+        basePrice: body.basePrice,
+        costPrice: body.costPrice,
+        weight: body.weight,
+        dimensions: body.dimensions,
+        category: body.category,
+        tags: body.tags || [],
+        isActive: body.isActive ?? true
+      },
       include: {
         store: {
           select: {
             name: true,
-            platform: true,
-            team: {
-              select: {
-                name: true
-              }
-            }
+            platform: true
           }
         }
       }
@@ -118,13 +106,6 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(product, { status: 201 })
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      )
-    }
-    
     console.error('Error creating product:', error)
     return NextResponse.json(
       { error: 'Failed to create product' },

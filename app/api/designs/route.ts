@@ -47,9 +47,9 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     
     const where: any = {}
-    if (teamId) where.teamId = teamId
-    if (status) where.status = status as DesignStatus
-    if (sellerId) where.sellerId = sellerId
+    if (teamId && teamId !== 'all') where.teamId = teamId
+    if (status && status !== 'all') where.status = status as DesignStatus
+    if (sellerId && sellerId !== 'all') where.sellerId = sellerId
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },

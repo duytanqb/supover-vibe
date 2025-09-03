@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -36,7 +36,20 @@ import {
   Zap,
   Building2,
   Boxes,
-  Layers
+  Layers,
+  Wallet,
+  DollarSign,
+  HandCoins,
+  CreditCard,
+  UserCog,
+  Shield,
+  UserPlus,
+  ClipboardList,
+  Truck,
+  BarChart3,
+  PieChart,
+  FileText,
+  ShoppingBag
 } from 'lucide-react'
 
 interface AdminLayoutProps {
@@ -60,67 +73,192 @@ const navigation: NavigationItem[] = [
     description: 'Overview & analytics'
   },
   {
-    name: 'Orders',
-    href: '/orders',
-    icon: ShoppingCart,
-    description: 'Order management',
-    badge: 'Auto'
+    name: 'Sales',
+    href: '#',
+    icon: ShoppingBag,
+    description: 'Sales management',
+    subItems: [
+      {
+        name: 'Orders',
+        href: '/orders',
+        icon: ShoppingCart,
+        description: 'Order management',
+        badge: 'Auto'
+      },
+      {
+        name: 'Fulfillment',
+        href: '/fulfillment',
+        icon: Truck,
+        description: 'Fulfillment tracking'
+      },
+      {
+        name: 'Stores',
+        href: '/stores',
+        icon: Store,
+        description: 'Channel management'
+      }
+    ]
   },
   {
-    name: 'Products',
-    href: '/products',
+    name: 'Catalog',
+    href: '#',
     icon: Package,
-    description: 'Product catalog'
+    description: 'Product management',
+    subItems: [
+      {
+        name: 'Products',
+        href: '/products',
+        icon: Package,
+        description: 'Product catalog'
+      },
+      {
+        name: 'Designs',
+        href: '/designs',
+        icon: Palette,
+        description: 'Design library'
+      },
+      {
+        name: 'Collections',
+        href: '/collections',
+        icon: Layers,
+        description: 'Product collections'
+      }
+    ]
   },
   {
-    name: 'Designs',
-    href: '/designs',
-    icon: Palette,
-    description: 'Design library'
-  },
-  {
-    name: 'Stores',
-    href: '/stores',
-    icon: Store,
-    description: 'Channel management'
-  },
-  {
-    name: 'Factories',
-    href: '/factories',
+    name: 'Production',
+    href: '#',
     icon: Factory,
     description: 'Production partners',
     subItems: [
       {
-        name: 'Factory Names',
-        href: '/factories/names',
+        name: 'Factories',
+        href: '/factories',
         icon: Building2,
-        description: 'Manage factory profiles'
+        description: 'Factory profiles'
       },
       {
         name: 'Supplier Variants',
         href: '/factories/supplier-variants',
         icon: Boxes,
-        description: 'Supplier product variants'
+        description: 'Supplier variants'
       },
       {
         name: 'System Variants',
         href: '/factories/system-variants',
         icon: Layers,
-        description: 'System variant mapping'
+        description: 'System variants'
+      },
+      {
+        name: 'Production Queue',
+        href: '/production-queue',
+        icon: ClipboardList,
+        description: 'Production status'
+      }
+    ]
+  },
+  {
+    name: 'Finance',
+    href: '#',
+    icon: DollarSign,
+    description: 'Financial management',
+    subItems: [
+      {
+        name: 'Cash Advances',
+        href: '/advances',
+        icon: HandCoins,
+        description: 'Seller advances'
+      },
+      {
+        name: 'Admin Advances',
+        href: '/admin/advances',
+        icon: CreditCard,
+        description: 'Approve advances',
+        badge: 'Admin'
+      },
+      {
+        name: 'Wallets',
+        href: '/wallets',
+        icon: Wallet,
+        description: 'Seller wallets'
+      },
+      {
+        name: 'Transactions',
+        href: '/transactions',
+        icon: FileText,
+        description: 'Transaction history'
+      },
+      {
+        name: 'Profit Sharing',
+        href: '/profit-sharing',
+        icon: PieChart,
+        description: 'Revenue distribution'
       }
     ]
   },
   {
     name: 'Analytics',
-    href: '/analytics',
-    icon: TrendingUp,
-    description: 'Reports & insights'
+    href: '#',
+    icon: BarChart3,
+    description: 'Reports & insights',
+    subItems: [
+      {
+        name: 'Dashboard',
+        href: '/analytics',
+        icon: TrendingUp,
+        description: 'Analytics overview'
+      },
+      {
+        name: 'Sales Reports',
+        href: '/analytics/sales',
+        icon: ShoppingCart,
+        description: 'Sales analytics'
+      },
+      {
+        name: 'Financial Reports',
+        href: '/analytics/finance',
+        icon: DollarSign,
+        description: 'Financial metrics'
+      },
+      {
+        name: 'Performance',
+        href: '/analytics/performance',
+        icon: BarChart3,
+        description: 'KPI tracking'
+      }
+    ]
   },
   {
-    name: 'Teams',
-    href: '/teams',
+    name: 'Users & Teams',
+    href: '#',
     icon: Users,
-    description: 'Team management'
+    description: 'User management',
+    subItems: [
+      {
+        name: 'Teams',
+        href: '/teams',
+        icon: Users,
+        description: 'Team management'
+      },
+      {
+        name: 'Users',
+        href: '/users',
+        icon: UserPlus,
+        description: 'User accounts'
+      },
+      {
+        name: 'Roles',
+        href: '/roles',
+        icon: Shield,
+        description: 'Role management'
+      },
+      {
+        name: 'Permissions',
+        href: '/permissions',
+        icon: UserCog,
+        description: 'Access control'
+      }
+    ]
   },
   {
     name: 'Settings',
@@ -133,14 +271,29 @@ const navigation: NavigationItem[] = [
 export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Factories'])
+  const [expandedItems, setExpandedItems] = useState<string[]>([])
 
   const isActive = (href: string) => {
+    if (href === '#') return false
     if (href === '/dashboard') {
       return pathname === '/dashboard' || pathname === '/'
     }
     return pathname.startsWith(href)
   }
+
+  // Auto-expand menu items that contain the current page
+  useEffect(() => {
+    const activeItems: string[] = []
+    navigation.forEach(item => {
+      if (item.subItems) {
+        const hasActiveChild = item.subItems.some(subItem => isActive(subItem.href))
+        if (hasActiveChild) {
+          activeItems.push(item.name)
+        }
+      }
+    })
+    setExpandedItems(activeItems)
+  }, [pathname])
 
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => 
@@ -415,12 +568,42 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex items-center">
               <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <span className="font-medium text-gray-900">
-                  {navigation.find(item => isActive(item.href))?.name || 'Dashboard'}
-                </span>
-                <span className="text-gray-400">
-                  {navigation.find(item => isActive(item.href))?.description}
-                </span>
+                {(() => {
+                  // Find active menu item or submenu item
+                  let activeItem = navigation.find(item => isActive(item.href))
+                  let parentItem = null
+                  
+                  if (!activeItem) {
+                    // Check submenus
+                    for (const item of navigation) {
+                      if (item.subItems) {
+                        const subItem = item.subItems.find(sub => isActive(sub.href))
+                        if (subItem) {
+                          activeItem = subItem
+                          parentItem = item
+                          break
+                        }
+                      }
+                    }
+                  }
+                  
+                  return (
+                    <>
+                      {parentItem && (
+                        <>
+                          <span className="text-gray-500">{parentItem.name}</span>
+                          <span className="text-gray-400">/</span>
+                        </>
+                      )}
+                      <span className="font-medium text-gray-900">
+                        {activeItem?.name || 'Dashboard'}
+                      </span>
+                      <span className="text-gray-400">
+                        {activeItem?.description}
+                      </span>
+                    </>
+                  )
+                })()}
               </div>
             </div>
           </div>
@@ -465,16 +648,24 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600">
+                <DropdownMenuItem 
+                  className="text-red-600"
+                  onClick={() => {
+                    localStorage.removeItem('token')
+                    window.location.href = '/login'
+                  }}
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
                 </DropdownMenuItem>

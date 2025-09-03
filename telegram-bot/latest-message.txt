@@ -1,0 +1,19 @@
+
+TELEGRAM MESSAGE RECEIVED
+========================
+From: User 548487652
+Chat: 548487652
+Message: "Still error fail to complie"
+
+TO RESPOND:
+-----------
+Option 1 - Use helper script:
+node telegram-bot/claude-send.js "Your response here"
+
+Option 2 - Use bash wrapper:
+./telegram-bot/claude-send.sh "Your response here"
+
+Option 3 - Direct queue:
+echo '{"message":"Your response","userId":548487652}' > telegram-bot/queue/outgoing/response.json
+
+The queue system will automatically deliver your response to Telegram!

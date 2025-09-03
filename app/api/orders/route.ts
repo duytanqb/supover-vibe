@@ -3,6 +3,16 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { OrderStatus, PaymentStatus } from '@prisma/client'
 
+// Generate unique 9-character order code
+function generateOrderCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let code = ''
+  for (let i = 0; i < 9; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return code
+}
+
 const createOrderSchema = z.object({
   storeId: z.string().cuid(),
   orderNumber: z.string().min(1, 'Order number is required'),
@@ -56,7 +66,22 @@ export async function GET(request: NextRequest) {
             platform: true,
             team: {
               select: {
-                name: true
+                id: true,
+                name: true,
+                members: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        username: true,
+                        name: true
+                      }
+                    }
+                  },
+                  where: {
+                    isLeader: true
+                  }
+                }
               }
             }
           }
@@ -87,7 +112,11 @@ export async function GET(request: NextRequest) {
                 code: true
               }
             }
-          }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 1
         },
         _count: {
           select: {
@@ -137,10 +166,25 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // Generate unique order code
+    let orderCode = generateOrderCode()
+    let codeExists = true
+    while (codeExists) {
+      const existing = await prisma.order.findUnique({
+        where: { orderCode }
+      })
+      if (!existing) {
+        codeExists = false
+      } else {
+        orderCode = generateOrderCode()
+      }
+    }
+    
     const order = await prisma.order.create({
       data: {
         storeId: validatedData.storeId,
         orderNumber: validatedData.orderNumber,
+        orderCode,
         customerName: validatedData.customerName,
         customerEmail: validatedData.customerEmail,
         shippingAddress: validatedData.shippingAddress,

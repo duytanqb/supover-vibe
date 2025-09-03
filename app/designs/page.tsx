@@ -61,8 +61,8 @@ export default function DesignsPage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState<string>('')
-  const [selectedTeam, setSelectedTeam] = useState<string>('')
+  const [selectedStatus, setSelectedStatus] = useState<string>('all')
+  const [selectedTeam, setSelectedTeam] = useState<string>('all')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   
   const {
@@ -94,7 +94,8 @@ export default function DesignsPage() {
       })
       if (response.ok) {
         const data = await response.json()
-        setTeams(data.teams || [])
+        // Handle both array and object responses
+        setTeams(Array.isArray(data) ? data : data.teams || [])
       }
     } catch (error) {
       console.error('Error fetching teams:', error)
@@ -105,8 +106,8 @@ export default function DesignsPage() {
     try {
       const params = new URLSearchParams()
       if (searchTerm) params.set('search', searchTerm)
-      if (selectedStatus) params.set('status', selectedStatus)
-      if (selectedTeam) params.set('teamId', selectedTeam)
+      if (selectedStatus && selectedStatus !== 'all') params.set('status', selectedStatus)
+      if (selectedTeam && selectedTeam !== 'all') params.set('teamId', selectedTeam)
       
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/designs?${params.toString()}`, {
@@ -116,7 +117,8 @@ export default function DesignsPage() {
       })
       if (response.ok) {
         const data = await response.json()
-        setDesigns(data.designs || [])
+        // API returns array directly, not wrapped in object
+        setDesigns(Array.isArray(data) ? data : data.designs || [])
       }
     } catch (error) {
       console.error('Error fetching designs:', error)
@@ -353,7 +355,7 @@ export default function DesignsPage() {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="DRAFT">Draft</SelectItem>
                   <SelectItem value="IN_REVIEW">In Review</SelectItem>
                   <SelectItem value="APPROVED">Approved</SelectItem>
@@ -367,7 +369,7 @@ export default function DesignsPage() {
                   <SelectValue placeholder="All teams" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All teams</SelectItem>
+                  <SelectItem value="all">All teams</SelectItem>
                   {teams.map((team) => (
                     <SelectItem key={team.id} value={team.id}>
                       {team.name}
@@ -489,9 +491,9 @@ export default function DesignsPage() {
               <Palette className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No designs found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm || selectedStatus || selectedTeam ? 'Try adjusting your filters' : 'Upload your first design to enable auto-fulfillment'}
+                {searchTerm || (selectedStatus !== 'all') || (selectedTeam !== 'all') ? 'Try adjusting your filters' : 'Upload your first design to enable auto-fulfillment'}
               </p>
-              {!searchTerm && !selectedStatus && !selectedTeam && (
+              {!searchTerm && selectedStatus === 'all' && selectedTeam === 'all' && (
                 <Button onClick={() => setIsCreateDialogOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Upload Your First Design

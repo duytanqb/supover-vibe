@@ -51,3 +51,10 @@ claude-code generate "Implement Next.js API routes for user management endpoints
   npm run test           # Run all tests
   npm run test:ui        # Interactive mode
   npm run test:headed    # See browser
+
+  build product page for seller can see detail of product about price, matterial, location help seller can understand the product to sell
+
+   To start using it right now:
+  1. Create a bot with @BotFather
+  2. Add your credentials to .env.telegram
+  3. Run: node telegram-bot/simple-bot.js

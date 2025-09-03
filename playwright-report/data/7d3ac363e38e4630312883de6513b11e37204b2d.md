@@ -1,0 +1,243 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e6]: Dragon Media
+      - generic [ref=e7]:
+        - link "Home" [ref=e8] [cursor=pointer]:
+          - /url: "#"
+        - link "Services" [ref=e9] [cursor=pointer]:
+          - /url: "#services"
+        - link "About" [ref=e10] [cursor=pointer]:
+          - /url: "#about"
+        - link "Contact" [ref=e11] [cursor=pointer]:
+          - /url: "#contact"
+      - generic [ref=e12]:
+        - link "Sign In" [ref=e13] [cursor=pointer]:
+          - /url: /login
+          - button "Sign In" [ref=e14] [cursor=pointer]
+        - link "Get Started" [ref=e15] [cursor=pointer]:
+          - /url: /login
+          - button "Get Started" [ref=e16] [cursor=pointer]
+  - main [ref=e17]:
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - img [ref=e23]
+        - generic [ref=e26]: Trusted by 3M+ Customers Worldwide
+      - heading "Dragon Media" [level=1] [ref=e27]
+      - paragraph [ref=e28]: Leading Print-on-Demand Fulfillment Solutions
+      - paragraph [ref=e29]: Empowering businesses across TikTok, Amazon, Google, and Pinterest with seamless POD services. 5+ years of excellence, 50+ dedicated professionals, serving multiple countries.
+      - generic [ref=e30]:
+        - link "Get Started Today" [ref=e31] [cursor=pointer]:
+          - /url: /login
+          - button "Get Started Today" [ref=e32] [cursor=pointer]:
+            - text: Get Started Today
+            - img [ref=e33] [cursor=pointer]
+        - link "Learn More About Us" [ref=e35] [cursor=pointer]:
+          - /url: "#services"
+          - button "Learn More About Us" [ref=e36] [cursor=pointer]
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - img [ref=e39]
+          - generic [ref=e42]: Free Setup
+        - generic [ref=e43]:
+          - img [ref=e44]
+          - generic [ref=e47]: 24/7 Support
+        - generic [ref=e48]:
+          - img [ref=e49]
+          - generic [ref=e52]: Global Shipping
+    - generic [ref=e54]:
+      - generic [ref=e55]:
+        - heading "Proven Track Record" [level=2] [ref=e56]
+        - paragraph [ref=e57]: Numbers that speak for our commitment to excellence and customer satisfaction
+      - generic [ref=e58]:
+        - generic [ref=e61]:
+          - img [ref=e63]
+          - generic [ref=e67]: 3M+
+          - generic [ref=e68]: Orders Shipped
+          - generic [ref=e69]: Successfully delivered worldwide
+        - generic [ref=e72]:
+          - img [ref=e74]
+          - generic [ref=e79]: 50+
+          - generic [ref=e80]: Team Members
+          - generic [ref=e81]: Dedicated professionals
+        - generic [ref=e84]:
+          - img [ref=e86]
+          - generic [ref=e89]: 3+
+          - generic [ref=e90]: Countries
+          - generic [ref=e91]: Global market presence
+        - generic [ref=e94]:
+          - img [ref=e96]
+          - generic [ref=e99]: 5+
+          - generic [ref=e100]: Years
+          - generic [ref=e101]: Industry experience
+    - generic [ref=e103]:
+      - generic [ref=e104]:
+        - generic [ref=e106]: Complete POD Solution
+        - heading "Everything You Need to Succeed" [level=2] [ref=e107]
+        - paragraph [ref=e108]: Comprehensive services designed to help you scale your print-on-demand business effortlessly
+      - generic [ref=e109]:
+        - generic [ref=e111]:
+          - img [ref=e113]
+          - heading "Custom Design Services" [level=3] [ref=e119]
+          - paragraph [ref=e120]: Professional design team creating unique products that sell. From concept to print-ready artwork.
+        - generic [ref=e122]:
+          - img [ref=e124]
+          - heading "Global Fulfillment" [level=3] [ref=e129]
+          - paragraph [ref=e130]: Fast, reliable shipping to customers worldwide. Multiple fulfillment centers for optimal delivery times.
+        - generic [ref=e132]:
+          - img [ref=e134]
+          - heading "Instant Processing" [level=3] [ref=e136]
+          - paragraph [ref=e137]: Automated order processing ensures your orders are in production within hours, not days.
+        - generic [ref=e139]:
+          - img [ref=e141]
+          - heading "Quality Guarantee" [level=3] [ref=e143]
+          - paragraph [ref=e144]: Premium materials and rigorous quality control. We stand behind every product we produce.
+        - generic [ref=e146]:
+          - img [ref=e148]
+          - heading "Dedicated Support" [level=3] [ref=e153]
+          - paragraph [ref=e154]: 24/7 customer service team ready to help. Personal account managers for high-volume sellers.
+        - generic [ref=e156]:
+          - img [ref=e158]
+          - heading "Analytics & Insights" [level=3] [ref=e160]
+          - paragraph [ref=e161]: Real-time dashboards and reporting to track your business growth and optimize performance.
+    - generic [ref=e163]:
+      - generic [ref=e164]:
+        - heading "Sell Everywhere Your Customers Shop" [level=2] [ref=e165]
+        - paragraph [ref=e166]: Multi-channel integration to maximize your reach and sales potential
+      - generic [ref=e167]:
+        - generic [ref=e170] [cursor=pointer]:
+          - generic [ref=e172] [cursor=pointer]: T
+          - heading "TikTok Shop" [level=3] [ref=e173] [cursor=pointer]
+          - paragraph [ref=e174] [cursor=pointer]: Seamless integration with TikTok's e-commerce platform
+        - generic [ref=e177] [cursor=pointer]:
+          - generic [ref=e179] [cursor=pointer]: A
+          - heading "Amazon" [level=3] [ref=e180] [cursor=pointer]
+          - paragraph [ref=e181] [cursor=pointer]: FBA and FBM fulfillment for Amazon sellers
+        - generic [ref=e184] [cursor=pointer]:
+          - generic [ref=e186] [cursor=pointer]: G
+          - heading "Google Shopping" [level=3] [ref=e187] [cursor=pointer]
+          - paragraph [ref=e188] [cursor=pointer]: Optimized for Google Merchant Center
+        - generic [ref=e191] [cursor=pointer]:
+          - generic [ref=e193] [cursor=pointer]: P
+          - heading "Pinterest" [level=3] [ref=e194] [cursor=pointer]
+          - paragraph [ref=e195] [cursor=pointer]: Perfect for Pinterest Shopping features
+      - generic [ref=e196]:
+        - paragraph [ref=e197]: Plus integrations with Shopify, WooCommerce, Etsy, and more!
+        - button "View All Integrations →" [ref=e198] [cursor=pointer]
+    - generic [ref=e200]:
+      - generic [ref=e201]:
+        - heading "Trusted by Thousands of Sellers" [level=2] [ref=e202]
+        - paragraph [ref=e203]: See what our partners say about working with Dragon Media
+      - generic [ref=e204]:
+        - generic [ref=e206]:
+          - img [ref=e207]
+          - generic [ref=e210]:
+            - img [ref=e211]
+            - img [ref=e213]
+            - img [ref=e215]
+            - img [ref=e217]
+            - img [ref=e219]
+          - paragraph [ref=e221]: "\"Dragon Media has been instrumental in scaling my POD business. Their quality and turnaround time are unmatched!\""
+          - generic [ref=e222]:
+            - generic [ref=e223]: Sarah Johnson
+            - generic [ref=e224]: E-commerce Entrepreneur
+            - generic [ref=e225]: TikTok Seller
+        - generic [ref=e227]:
+          - img [ref=e228]
+          - generic [ref=e231]:
+            - img [ref=e232]
+            - img [ref=e234]
+            - img [ref=e236]
+            - img [ref=e238]
+            - img [ref=e240]
+          - paragraph [ref=e242]: "\"The integration with multiple platforms saved us countless hours. Outstanding service and support team.\""
+          - generic [ref=e243]:
+            - generic [ref=e244]: Michael Chen
+            - generic [ref=e245]: Brand Owner
+            - generic [ref=e246]: Amazon FBA
+        - generic [ref=e248]:
+          - img [ref=e249]
+          - generic [ref=e252]:
+            - img [ref=e253]
+            - img [ref=e255]
+            - img [ref=e257]
+            - img [ref=e259]
+            - img [ref=e261]
+          - paragraph [ref=e263]: "\"From 100 to 10,000 orders per month - Dragon Media handled our growth seamlessly. Highly recommended!\""
+          - generic [ref=e264]:
+            - generic [ref=e265]: Emma Williams
+            - generic [ref=e266]: Digital Marketer
+            - generic [ref=e267]: Multi-Channel
+    - generic [ref=e271]:
+      - img [ref=e273]
+      - heading "Ready to Scale Your POD Business?" [level=2] [ref=e278]
+      - paragraph [ref=e279]: Join thousands of successful sellers who trust Dragon Media for their print-on-demand fulfillment. Start today with zero setup fees and no minimum orders.
+      - generic [ref=e280]:
+        - link "Start Free Trial" [ref=e281] [cursor=pointer]:
+          - /url: /login
+          - button "Start Free Trial" [ref=e282] [cursor=pointer]:
+            - text: Start Free Trial
+            - img [ref=e283] [cursor=pointer]
+        - link "Schedule a Demo" [ref=e285] [cursor=pointer]:
+          - /url: /login
+          - button "Schedule a Demo" [ref=e286] [cursor=pointer]
+      - paragraph [ref=e287]: No credit card required • Setup in minutes • Cancel anytime
+  - contentinfo [ref=e288]:
+    - generic [ref=e289]:
+      - generic [ref=e290]:
+        - generic [ref=e291]:
+          - heading "Dragon Media" [level=3] [ref=e292]
+          - paragraph [ref=e293]: Your trusted partner in print-on-demand fulfillment since 2019.
+          - generic [ref=e294]:
+            - img [ref=e295]
+            - generic [ref=e298]: Da Nang, Vietnam
+        - generic [ref=e299]:
+          - heading "Services" [level=4] [ref=e300]
+          - list [ref=e301]:
+            - listitem [ref=e302]:
+              - link "Custom Printing" [ref=e303] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e304]:
+              - link "Fulfillment" [ref=e305] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e306]:
+              - link "Design Services" [ref=e307] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e308]:
+              - link "Integration API" [ref=e309] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e310]:
+          - heading "Company" [level=4] [ref=e311]
+          - list [ref=e312]:
+            - listitem [ref=e313]:
+              - link "About Us" [ref=e314] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e315]:
+              - link "Careers" [ref=e316] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e317]:
+              - link "Partners" [ref=e318] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e319]:
+              - link "Contact" [ref=e320] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e321]:
+          - heading "Get in Touch" [level=4] [ref=e322]
+          - list [ref=e323]:
+            - listitem [ref=e324]:
+              - img [ref=e325]
+              - link "supover.com" [ref=e328] [cursor=pointer]:
+                - /url: https://supover.com
+            - listitem [ref=e329]:
+              - img [ref=e330]
+              - link "hello@supover.com" [ref=e333] [cursor=pointer]:
+                - /url: mailto:hello@supover.com
+            - listitem [ref=e334]:
+              - img [ref=e335]
+              - generic [ref=e337]: +84 236 XXX XXXX
+      - paragraph [ref=e339]: © 2024 Dragon Media - Supover.com. All rights reserved.
+  - alert [ref=e340]
+```

@@ -1,0 +1,698 @@
+// ============================================
+// CUSTOMER MANAGEMENT
+// ============================================
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  VIP
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
+  BOTH
+}
+
+model Customer {
+  id                String         @id @default(cuid())
+  externalId        String?        // ID from source platform
+  email             String         @unique
+  name              String
+  phone             String?
+  dateOfBirth       DateTime?
+  gender            String?
+  status            CustomerStatus @default(ACTIVE)
+  source            String         // TIKTOK_SHOP, SHOPIFY, etc.
+  
+  // Analytics fields
+  totalSpent        Decimal        @default(0) @db.Decimal(10, 2)
+  orderCount        Int            @default(0)
+  averageOrderValue Decimal        @default(0) @db.Decimal(10, 2)
+  lastOrderDate     DateTime?
+  firstOrderDate    DateTime?
+  
+  // Metadata
+  tags              String[]
+  customFields      Json?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  // Relations
+  addresses         Address[]
+  orders            Order[]        @relation("CustomerOrders")
+  notes             CustomerNote[]
+  communications    Communication[]
+  supportTickets    SupportTicket[]
+  reviews           Review[]
+  returns           Return[]
+  
+  @@index([email])
+  @@index([phone])
+  @@index([source])
+  @@index([status])
+}
+
+model Address {
+  id            String      @id @default(cuid())
+  customerId    String
+  type          AddressType @default(SHIPPING)
+  isDefault     Boolean     @default(false)
+  
+  // Address fields
+  line1         String
+  line2         String?
+  city          String
+  state         String
+  postalCode    String
+  country       String
+  
+  // Contact
+  recipientName String
+  phone         String?
+  
+  // Validation
+  validatedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  customer      Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@index([customerId])
+}
+
+model CustomerNote {
+  id         String   @id @default(cuid())
+  customerId String
+  userId     String
+  note       String
+  isInternal Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id])
+  
+  @@index([customerId])
+}
+
+// ============================================
+// ENHANCED SHIPMENT TRACKING
+// ============================================
+
+enum ShipmentStatus {
+  PENDING
+  LABEL_CREATED
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  RETURNED_TO_SENDER
+  LOST
+  DAMAGED
+  CANCELLED
+}
+
+enum ExceptionType {
+  DELIVERY_FAILED
+  ADDRESS_ISSUE
+  CUSTOMS_DELAY
+  WEATHER_DELAY
+  DAMAGED_IN_TRANSIT
+  LOST_IN_TRANSIT
+  REFUSED_BY_RECIPIENT
+}
+
+enum ExceptionSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model EnhancedShipment {
+  id                String         @id @default(cuid())
+  orderId           String         @unique
+  orderItemId       String?        // For split shipments
+  
+  // Carrier information
+  carrier           String         // USPS, UPS, FEDEX, DHL, etc.
+  service           String         // FIRST_CLASS, PRIORITY, EXPRESS, etc.
+  trackingNumber    String         @unique
+  trackingUrl       String?
+  
+  // Status tracking
+  status            ShipmentStatus
+  statusHistory     Json           // Array of status changes
+  lastStatusUpdate  DateTime?
+  
+  // Delivery information
+  estimatedDelivery DateTime?
+  actualDelivery    DateTime?
+  deliverySignature String?
+  deliveryPhoto     String?
+  
+  // Shipping details
+  weight            Decimal?       @db.Decimal(10, 3)
+  length            Decimal?       @db.Decimal(10, 2)
+  width             Decimal?       @db.Decimal(10, 2)
+  height            Decimal?       @db.Decimal(10, 2)
+  
+  // Cost information
+  shippingCost      Decimal        @db.Decimal(10, 2)
+  insuranceAmount   Decimal?       @db.Decimal(10, 2)
+  declaredValue     Decimal?       @db.Decimal(10, 2)
+  
+  // Label information
+  labelUrl          String?
+  labelCreatedAt    DateTime?
+  
+  // Address snapshot
+  fromAddress       Json
+  toAddress         Json
+  returnAddress     Json?
+  
+  // Metadata
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  // Relations
+  order             Order          @relation(fields: [orderId], references: [id])
+  trackingEvents    TrackingEvent[]
+  exceptions        ShipmentException[]
+  
+  @@index([orderId])
+  @@index([trackingNumber])
+  @@index([carrier])
+  @@index([status])
+}
+
+model TrackingEvent {
+  id          String           @id @default(cuid())
+  shipmentId  String
+  
+  // Event details
+  status      String
+  description String
+  location    String?
+  timestamp   DateTime
+  
+  // Carrier data
+  carrierCode String?
+  rawData     Json?
+  
+  createdAt   DateTime         @default(now())
+  
+  shipment    EnhancedShipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  
+  @@index([shipmentId])
+  @@index([timestamp])
+}
+
+model ShipmentException {
+  id          String            @id @default(cuid())
+  shipmentId  String
+  
+  // Exception details
+  type        ExceptionType
+  severity    ExceptionSeverity
+  description String
+  resolution  String?
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  shipment    EnhancedShipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  
+  @@index([shipmentId])
+  @@index([type])
+  @@index([severity])
+}
+
+// ============================================
+// RETURNS & REFUNDS MANAGEMENT
+// ============================================
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  LABEL_SENT
+  IN_TRANSIT
+  RECEIVED
+  INSPECTING
+  REFUNDED
+  REJECTED
+  CANCELLED
+}
+
+enum ReturnReason {
+  DEFECTIVE
+  NOT_AS_DESCRIBED
+  WRONG_ITEM
+  SIZE_ISSUE
+  COLOR_ISSUE
+  DAMAGED_IN_SHIPPING
+  NO_LONGER_WANTED
+  LATE_DELIVERY
+  OTHER
+}
+
+enum RefundMethod {
+  ORIGINAL_PAYMENT
+  STORE_CREDIT
+  REPLACEMENT
+  PARTIAL_REFUND
+}
+
+model Return {
+  id              String        @id @default(cuid())
+  orderId         String
+  customerId      String
+  orderItems      Json          // Array of items being returned
+  
+  // Return details
+  reason          ReturnReason
+  reasonDetails   String?
+  status          ReturnStatus  @default(REQUESTED)
+  
+  // RMA information
+  rmaNumber       String        @unique
+  returnLabel     String?
+  
+  // Refund information
+  refundMethod    RefundMethod?
+  refundAmount    Decimal?      @db.Decimal(10, 2)
+  refundedAt      DateTime?
+  exchangeOrderId String?
+  
+  // Inspection
+  inspectionNotes String?
+  inspectedBy     String?
+  inspectedAt     DateTime?
+  
+  // Photos
+  customerPhotos  String[]
+  inspectionPhotos String[]
+  
+  // Timestamps
+  requestedAt     DateTime      @default(now())
+  approvedAt      DateTime?
+  receivedAt      DateTime?
+  completedAt     DateTime?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  order           Order         @relation(fields: [orderId], references: [id])
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  statusHistory   ReturnStatusHistory[]
+  
+  @@index([orderId])
+  @@index([customerId])
+  @@index([rmaNumber])
+  @@index([status])
+}
+
+model ReturnStatusHistory {
+  id        String       @id @default(cuid())
+  returnId  String
+  status    ReturnStatus
+  comment   String?
+  changedBy String
+  createdAt DateTime     @default(now())
+  
+  return    Return       @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  
+  @@index([returnId])
+}
+
+// ============================================
+// INVENTORY MANAGEMENT
+// ============================================
+
+enum InventoryType {
+  RAW_MATERIAL
+  BLANK_PRODUCT
+  FINISHED_GOODS
+  PACKAGING
+}
+
+enum MovementType {
+  INBOUND
+  OUTBOUND
+  ADJUSTMENT
+  TRANSFER
+  RETURN
+  DAMAGE
+}
+
+model Inventory {
+  id               String        @id @default(cuid())
+  sku              String
+  factoryId        String
+  type             InventoryType
+  name             String
+  
+  // Stock levels
+  quantity         Int
+  reservedQuantity Int           @default(0)
+  availableQuantity Int          @default(0)
+  
+  // Reorder management
+  reorderPoint     Int
+  reorderQuantity  Int
+  maxStock         Int?
+  
+  // Location
+  warehouse        String?
+  location         String?
+  
+  // Cost
+  unitCost         Decimal       @db.Decimal(10, 2)
+  totalValue       Decimal       @db.Decimal(10, 2)
+  
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  
+  // Relations
+  factory          Factory       @relation(fields: [factoryId], references: [id])
+  movements        InventoryMovement[]
+  
+  @@unique([sku, factoryId])
+  @@index([factoryId])
+  @@index([sku])
+  @@index([type])
+}
+
+model InventoryMovement {
+  id          String       @id @default(cuid())
+  inventoryId String
+  type        MovementType
+  quantity    Int
+  
+  // Movement details
+  referenceType String?    // ORDER, RETURN, ADJUSTMENT, etc.
+  referenceId   String?
+  reason        String?
+  
+  // Stock levels after movement
+  previousQuantity Int
+  newQuantity      Int
+  
+  // User tracking
+  performedBy  String
+  notes        String?
+  
+  createdAt    DateTime    @default(now())
+  
+  inventory    Inventory   @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  
+  @@index([inventoryId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ============================================
+// COMMUNICATION & NOTIFICATIONS
+// ============================================
+
+enum CommunicationType {
+  EMAIL
+  SMS
+  PUSH
+  IN_APP
+  WHATSAPP
+}
+
+enum CommunicationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  FAILED
+  BOUNCED
+}
+
+model Communication {
+  id          String               @id @default(cuid())
+  customerId  String?
+  userId      String?
+  
+  // Communication details
+  type        CommunicationType
+  subject     String?
+  content     String
+  template    String?
+  
+  // Status tracking
+  status      CommunicationStatus  @default(PENDING)
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  openedAt    DateTime?
+  clickedAt   DateTime?
+  failedAt    DateTime?
+  failureReason String?
+  
+  // Metadata
+  metadata    Json?
+  tags        String[]
+  
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  
+  // Relations
+  customer    Customer?            @relation(fields: [customerId], references: [id])
+  user        User?                @relation(fields: [userId], references: [id])
+  
+  @@index([customerId])
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model NotificationTemplate {
+  id          String               @id @default(cuid())
+  name        String               @unique
+  type        CommunicationType
+  subject     String?
+  content     String
+  variables   String[]             // List of available variables
+  isActive    Boolean              @default(true)
+  
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  
+  @@index([name])
+  @@index([type])
+}
+
+// ============================================
+// SUPPORT & TICKETING
+// ============================================
+
+enum TicketStatus {
+  NEW
+  OPEN
+  IN_PROGRESS
+  WAITING_CUSTOMER
+  WAITING_INTERNAL
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketCategory {
+  ORDER_ISSUE
+  SHIPPING_DELAY
+  PRODUCT_QUALITY
+  REFUND_REQUEST
+  TECHNICAL_ISSUE
+  ACCOUNT_ISSUE
+  GENERAL_INQUIRY
+  OTHER
+}
+
+model SupportTicket {
+  id          String         @id @default(cuid())
+  ticketNumber String        @unique
+  customerId  String
+  orderId     String?
+  
+  // Ticket details
+  subject     String
+  description String
+  category    TicketCategory
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus   @default(NEW)
+  
+  // Assignment
+  assignedTo  String?
+  assignedAt  DateTime?
+  
+  // Resolution
+  resolution  String?
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  
+  // SLA
+  slaDeadline DateTime?
+  
+  // Satisfaction
+  rating      Int?           // 1-5 stars
+  feedback    String?
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  closedAt    DateTime?
+  
+  // Relations
+  customer    Customer       @relation(fields: [customerId], references: [id])
+  order       Order?         @relation(fields: [orderId], references: [id])
+  messages    TicketMessage[]
+  
+  @@index([customerId])
+  @@index([orderId])
+  @@index([ticketNumber])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedTo])
+}
+
+model TicketMessage {
+  id         String        @id @default(cuid())
+  ticketId   String
+  senderId   String        // Can be customer or support agent
+  senderType String        // CUSTOMER, AGENT, SYSTEM
+  message    String
+  attachments String[]
+  isInternal Boolean       @default(false)
+  
+  createdAt  DateTime      @default(now())
+  
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
+}
+
+// ============================================
+// REVIEWS & RATINGS
+// ============================================
+
+model Review {
+  id         String   @id @default(cuid())
+  customerId String
+  orderId    String
+  productId  String
+  
+  // Review details
+  rating     Int      // 1-5 stars
+  title      String?
+  comment    String
+  photos     String[]
+  
+  // Verification
+  isVerified Boolean  @default(false)
+  
+  // Response
+  response   String?
+  respondedBy String?
+  respondedAt DateTime?
+  
+  // Helpful votes
+  helpfulCount Int    @default(0)
+  notHelpfulCount Int @default(0)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  // Relations
+  customer   Customer @relation(fields: [customerId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id])
+  product    Product  @relation(fields: [productId], references: [id])
+  
+  @@index([customerId])
+  @@index([orderId])
+  @@index([productId])
+  @@index([rating])
+}
+
+// ============================================
+// QUALITY CONTROL
+// ============================================
+
+enum QualityCheckStatus {
+  PENDING
+  IN_PROGRESS
+  PASSED
+  FAILED
+  CONDITIONAL_PASS
+}
+
+model QualityCheck {
+  id           String             @id @default(cuid())
+  orderId      String
+  orderItemId  String?
+  factoryId    String
+  
+  // Check details
+  checkType    String             // PRE_PRODUCTION, IN_PRODUCTION, FINAL
+  status       QualityCheckStatus @default(PENDING)
+  score        Int?               // 0-100
+  
+  // Inspection details
+  checkedBy    String
+  checkedAt    DateTime?
+  
+  // Defects
+  defects      QualityDefect[]
+  
+  // Photos
+  photos       String[]
+  
+  // Notes
+  notes        String?
+  
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  
+  // Relations
+  order        Order              @relation(fields: [orderId], references: [id])
+  factory      Factory            @relation(fields: [factoryId], references: [id])
+  
+  @@index([orderId])
+  @@index([factoryId])
+  @@index([status])
+}
+
+model QualityDefect {
+  id            String       @id @default(cuid())
+  qualityCheckId String
+  
+  // Defect details
+  category      String       // PRINT, COLOR, SIZE, STITCHING, etc.
+  severity      String       // MINOR, MAJOR, CRITICAL
+  description   String
+  location      String?
+  photos        String[]
+  
+  // Resolution
+  resolution    String?
+  resolvedAt    DateTime?
+  
+  createdAt     DateTime     @default(now())
+  
+  qualityCheck  QualityCheck @relation(fields: [qualityCheckId], references: [id], onDelete: Cascade)
+  
+  @@index([qualityCheckId])
+}

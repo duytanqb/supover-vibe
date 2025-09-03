@@ -1,0 +1,43 @@
+#!/usr/bin/env node
+// Simple send script for Claude
+const https = require('https');
+
+const TOKEN = '7402027636:AAHXIP9Q3xkFmzzrXd1YaOWMMQwEwCp3NWs';
+const CHAT_ID = 548487652;
+const message = process.argv.slice(2).join(' ');
+
+if (!message) {
+  console.error('Usage: ./send "Your message"');
+  process.exit(1);
+}
+
+const data = JSON.stringify({
+  chat_id: CHAT_ID,
+  text: '🤖 ' + message,
+  parse_mode: 'Markdown'
+});
+
+const options = {
+  hostname: 'api.telegram.org',
+  path: '/bot' + TOKEN + '/sendMessage',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(data)
+  }
+};
+
+const req = https.request(options, (res) => {
+  if (res.statusCode === 200) {
+    console.log('✅ Message sent to Telegram');
+  } else {
+    console.error('❌ Failed to send:', res.statusCode);
+  }
+});
+
+req.on('error', (e) => {
+  console.error('❌ Error:', e.message);
+});
+
+req.write(data);
+req.end();

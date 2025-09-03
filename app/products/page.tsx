@@ -7,58 +7,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Plus, Package, Search } from 'lucide-react'
-
-const createProductSchema = z.object({
-  storeId: z.string().cuid(),
-  sku: z.string().min(1, 'SKU is required'),
-  name: z.string().min(1, 'Product name is required'),
-  description: z.string().optional(),
-  basePrice: z.number().positive('Base price must be positive'),
-  costPrice: z.number().positive('Cost price must be positive'),
-  weight: z.number().positive().optional(),
-  category: z.string().optional(),
-  tags: z.string().optional()
-})
-
-type CreateProductData = z.infer<typeof createProductSchema>
+import { 
+  Package, 
+  Search, 
+  Plus,
+  Edit,
+  ShoppingBag,
+  Star,
+  MessageSquare,
+  DollarSign
+} from 'lucide-react'
 
 interface Product {
   id: string
+  storeId: string
   sku: string
   name: string
   description?: string
-  basePrice: number
-  costPrice: number
-  weight?: number
+  basePrice: string | number
+  costPrice: string | number
+  weight?: string | number
   category?: string
   tags: string[]
   isActive: boolean
   createdAt: string
   store: {
+    id: string
     name: string
     platform: string
-    team: {
-      name: string
-    }
   }
-  designs: Array<{
-    design: {
-      id: string
-      name: string
-      status: string
-      thumbnailUrl?: string
-    }
-  }>
   _count: {
     orderItems: number
+    designs: number
   }
 }
 
@@ -73,18 +55,8 @@ export default function ProductsPage() {
   const [stores, setStores] = useState<Store[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedStore, setSelectedStore] = useState<string>('')
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors, isSubmitting }
-  } = useForm<CreateProductData>({
-    resolver: zodResolver(createProductSchema)
-  })
+  const [selectedStore, setSelectedStore] = useState<string>('all')
+  const [selectedStatus, setSelectedStatus] = useState<string>('all')
 
   useEffect(() => {
     fetchStores()
@@ -93,16 +65,11 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts()
-  }, [searchTerm, selectedStore])
+  }, [searchTerm, selectedStore, selectedStatus])
 
   const fetchStores = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/stores', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
+      const response = await fetch('/api/stores')
       if (response.ok) {
         const data = await response.json()
         setStores(data)
@@ -115,66 +82,57 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     try {
       const params = new URLSearchParams()
-      if (searchTerm) params.set('search', searchTerm)
-      if (selectedStore) params.set('storeId', selectedStore)
+      if (searchTerm) params.set('name', searchTerm)
+      if (selectedStore && selectedStore !== 'all') params.set('storeId', selectedStore)
+      if (selectedStatus && selectedStatus !== 'all') params.set('isActive', selectedStatus)
       
-      const token = localStorage.getItem('token')
-      const response = await fetch(`/api/products?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
+      const response = await fetch(`/api/products?${params.toString()}`)
       if (response.ok) {
         const data = await response.json()
-        setProducts(data)
+        setProducts(data.products || [])
+      } else {
+        console.error('Failed to fetch products:', response.status)
+        setProducts([])
       }
     } catch (error) {
       console.error('Error fetching products:', error)
+      setProducts([])
     } finally {
       setLoading(false)
     }
   }
 
-  const onSubmit = async (data: CreateProductData) => {
-    try {
-      const formData = {
-        ...data,
-        tags: data.tags ? data.tags.split(',').map(tag => tag.trim()) : []
-      }
-      
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      })
-
-      if (response.ok) {
-        const newProduct = await response.json()
-        setProducts(prev => [newProduct, ...prev])
-        setIsCreateDialogOpen(false)
-        reset()
-      } else {
-        const error = await response.json()
-        console.error('Error creating product:', error)
-      }
-    } catch (error) {
-      console.error('Error creating product:', error)
-    }
-  }
-
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: string | number) => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
-    }).format(price)
+    }).format(numPrice)
+  }
+
+  const getPlatformColor = (platform: string) => {
+    switch (platform) {
+      case 'TIKTOK_SHOP': return 'bg-pink-500'
+      case 'SHOPIFY': return 'bg-green-500'
+      case 'ETSY': return 'bg-orange-500'
+      case 'AMAZON': return 'bg-yellow-500'
+      default: return 'bg-gray-500'
+    }
+  }
+
+  const calculateMargin = (basePrice: string | number, costPrice: string | number) => {
+    const base = typeof basePrice === 'string' ? parseFloat(basePrice) : basePrice
+    const cost = typeof costPrice === 'string' ? parseFloat(costPrice) : costPrice
+    if (cost === 0) return 100
+    return ((base - cost) / base * 100).toFixed(1)
   }
 
   if (loading) {
-    return <div className="p-6">Loading products...</div>
+    return (
+      <AdminLayout>
+        <div className="p-6">Loading products...</div>
+      </AdminLayout>
+    )
   }
 
   return (
@@ -182,154 +140,6 @@ export default function ProductsPage() {
       <PageHeader 
         title="Products" 
         description="Manage your product catalog across all stores"
-        action={
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Product
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Add New Product</DialogTitle>
-                <DialogDescription>
-                  Create a new product in your catalog
-                </DialogDescription>
-              </DialogHeader>
-              
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="storeId">Store</Label>
-                    <Select onValueChange={(value) => setValue('storeId', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select store" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stores.map((store) => (
-                          <SelectItem key={store.id} value={store.id}>
-                            {store.name} ({store.platform})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.storeId && (
-                      <p className="text-sm text-red-500">{errors.storeId.message}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="sku">SKU</Label>
-                    <Input
-                      id="sku"
-                      {...register('sku')}
-                      placeholder="PROD-001"
-                    />
-                    {errors.sku && (
-                      <p className="text-sm text-red-500">{errors.sku.message}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="name">Product Name</Label>
-                  <Input
-                    id="name"
-                    {...register('name')}
-                    placeholder="Premium T-Shirt"
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-red-500">{errors.name.message}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="description">Description (Optional)</Label>
-                  <Input
-                    id="description"
-                    {...register('description')}
-                    placeholder="High-quality cotton t-shirt"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="basePrice">Base Price</Label>
-                    <Input
-                      id="basePrice"
-                      type="number"
-                      step="0.01"
-                      {...register('basePrice', { valueAsNumber: true })}
-                      placeholder="19.99"
-                    />
-                    {errors.basePrice && (
-                      <p className="text-sm text-red-500">{errors.basePrice.message}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="costPrice">Cost Price</Label>
-                    <Input
-                      id="costPrice"
-                      type="number"
-                      step="0.01"
-                      {...register('costPrice', { valueAsNumber: true })}
-                      placeholder="8.50"
-                    />
-                    {errors.costPrice && (
-                      <p className="text-sm text-red-500">{errors.costPrice.message}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="weight">Weight (kg, Optional)</Label>
-                    <Input
-                      id="weight"
-                      type="number"
-                      step="0.001"
-                      {...register('weight', { valueAsNumber: true })}
-                      placeholder="0.200"
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="category">Category (Optional)</Label>
-                    <Input
-                      id="category"
-                      {...register('category')}
-                      placeholder="Apparel"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="tags">Tags (Optional)</Label>
-                    <Input
-                      id="tags"
-                      {...register('tags')}
-                      placeholder="t-shirt, cotton, premium"
-                    />
-                  </div>
-                </div>
-                
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsCreateDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? 'Creating...' : 'Create Product'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        }
       />
 
       <Card>
@@ -358,7 +168,7 @@ export default function ProductsPage() {
                   <SelectValue placeholder="All stores" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All stores</SelectItem>
+                  <SelectItem value="all">All stores</SelectItem>
                   {stores.map((store) => (
                     <SelectItem key={store.id} value={store.id}>
                       {store.name}
@@ -366,6 +176,22 @@ export default function ProductsPage() {
                   ))}
                 </SelectContent>
               </Select>
+              
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="All status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All status</SelectItem>
+                  <SelectItem value="true">Active</SelectItem>
+                  <SelectItem value="false">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Product
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -377,9 +203,10 @@ export default function ProductsPage() {
                 <TableHead>Product</TableHead>
                 <TableHead>Store</TableHead>
                 <TableHead>SKU</TableHead>
-                <TableHead>Pricing</TableHead>
-                <TableHead>Designs</TableHead>
-                <TableHead>Orders</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Cost</TableHead>
+                <TableHead>Margin</TableHead>
+                <TableHead>Stats</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -390,59 +217,57 @@ export default function ProductsPage() {
                   <TableCell>
                     <div>
                       <p className="font-medium">{product.name}</p>
-                      {product.description && (
-                        <p className="text-sm text-muted-foreground">{product.description}</p>
+                      {product.category && (
+                        <p className="text-sm text-muted-foreground">{product.category}</p>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div>
                       <p className="font-medium">{product.store.name}</p>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className={`${getPlatformColor(product.store.platform)} text-white text-xs`}>
                         {product.store.platform}
                       </Badge>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <code className="text-sm bg-muted px-2 py-1 rounded">
-                      {product.sku}
-                    </code>
+                    <code className="text-sm">{product.sku}</code>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">
-                      <p>Base: {formatPrice(product.basePrice)}</p>
-                      <p className="text-muted-foreground">Cost: {formatPrice(product.costPrice)}</p>
+                    <div className="font-medium">
+                      {formatPrice(product.basePrice)}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm">{product.designs.length}</span>
-                      {product.designs.length > 0 && (
-                        <div className="flex space-x-1">
-                          {product.designs.slice(0, 3).map((pd) => (
-                            <Badge
-                              key={pd.design.id}
-                              variant={pd.design.status === 'ARCHIVED' ? 'default' : 'secondary'}
-                              className="text-xs"
-                            >
-                              {pd.design.status}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+                    <div className="text-sm text-muted-foreground">
+                      {formatPrice(product.costPrice)}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{product._count.orderItems}</span>
+                    <Badge variant="outline" className="font-mono">
+                      {calculateMargin(product.basePrice, product.costPrice)}%
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={product.isActive ? 'default' : 'secondary'}>
+                    <div className="flex items-center space-x-3 text-sm">
+                      <div className="flex items-center" title="Orders">
+                        <ShoppingBag className="w-3 h-3 mr-1" />
+                        {product._count.orderItems}
+                      </div>
+                      <div className="flex items-center" title="Designs">
+                        <Package className="w-3 h-3 mr-1" />
+                        {product._count.designs}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={product.isActive ? "default" : "secondary"}>
                       {product.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Button variant="outline" size="sm">
-                      Edit
+                      <Edit className="w-4 h-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -455,14 +280,12 @@ export default function ProductsPage() {
               <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No products found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm || selectedStore ? 'Try adjusting your filters' : 'Add your first product to get started'}
+                {searchTerm || selectedStore || selectedStatus ? 'Try adjusting your filters' : 'Start by adding your first product'}
               </p>
-              {!searchTerm && !selectedStore && (
-                <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Your First Product
-                </Button>
-              )}
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Product
+              </Button>
             </div>
           )}
         </CardContent>

@@ -4,8 +4,8 @@
 Comprehensive factory network management với capacity monitoring, pricing optimization, và performance tracking.
 
 ## Key Features
-- Factory onboarding và profiling
-- Variant mapping và capability tracking
+- Factory onboarding and profiling
+- Variant mapping and capability tracking
 - Dynamic pricing management
 - Capacity monitoring
 - Quality control
